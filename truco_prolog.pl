@@ -9,7 +9,13 @@ crearJugador(Nombre, jugador(Nombre, [], [_])).
 
 jugador(_, [_], [_]).
 
-jugadores([jugador(_, [_], [_]), jugador(_, [_], [_])]).
+puntos_truco([_], [_]).
+
+puntos_envido([_], [_]).
+
+%jugadores([jugador(_, [_], [_]), jugador(_, [_], [_])]).
+
+jugadores([jugador(j1,[[2, espada], [4, oro], [3, espada]],[_]), jugador(j2,[[caballo, copa], [3, copa], [1, copa]],[_])]).
 
 stock([[rey, oro], [rey, espada], [rey, basto], [rey, copa],
         [caballo, oro], [caballo, espada], [caballo, basto], [caballo, copa],
@@ -52,7 +58,6 @@ valor_envido(1, 1).
 
 estado(S0, S, S0, S).
 
-
 carta([Numero,Palo]):-
     palos(ListaPalos),
     numeros(ListaNumeros),
@@ -79,42 +84,68 @@ truco -->
     %valeCuatro
 
 jugar_rondas -->
-    {jugadores([jugador(N1,[_], [PJ1]),jugador(N2,[_], [PJ2])]),
+    estado(S0, _),
+    {select(jugadores([
+            jugador(_,_,[PJ1]),
+            jugador(_,_,[PJ2])
+        ]), S0, _),
+    (PJ1 #< 30, PJ2 #< 30)},
+    jugar_ronda,
+    jugar_rondas.
+
+jugar_rondas -->
+    estado(S, S),
+    {select(jugadores([
+            jugador(N1,_,[PJ1]),
+            jugador(N2,_,[PJ2])
+        ]), S, _),
     (PJ1 #> PJ2 ->
         format("El ganador es ~w con ~w puntos~n", [N1, PJ1])
     ;
         format("El ganador es ~w con ~w puntos~n", [N2, PJ2])
 	)}.
 
-jugar_rondas -->
-    {jugadores([jugador(_,[_], [PJ1]),
-           jugador(_,[_], [PJ2])]),
-    (PJ1 #< 30, PJ2 #< 30)}.
 
-jugar_ronda -->
+jugar_ronda([]) --> [].
+jugar_ronda([P|Ps]) -->
     estado(S, S),
-    jugadores(X),
-    tirar_cartas(X, _),
-    {}.
+    {	P = jugador(Nombre, CartasEnMano, _),
+      	format("es el turno de ~a!~n", [Nombre]),
+		format("cartas restantes: ~w~n", [CartasEnMano]),
+     	format("OPCIONES: ~w tirar carta,~w cantar truco,
+              ~w cantar envido, ~w irse al mazo ~n", [1,2,3,4]),
+    	read(C)},
+    buscar_opciones(C, Nombre, _),
+    jugar_ronda(Ps).
+
+buscar_opciones(C, N, P1) --> 
+    {C #= 1}, tirar_carta(N, P1).
+
+buscar_opciones(C, N, P1) --> 
+    {C #= 2}, tirar_carta(N, P1).
+
+buscar_opciones(C, N, P1) --> 
+    {C #= 3}, tirar_carta(N, P1).
+
+buscar_opciones(C, _, _) --> % N y P1
+    {C #= 4}.
 
 quitar_carta(P0, C, P) :-
     P0 = jugador(N, C0, W),
     select(C, C0, C1),
     P = jugador(N, C1, W).
 
-tirar_cartas([],[]) --> [].
-tirar_cartas([P|Ps],[C|Cs]) -->
-    {
-    	P = jugador(Nombre, CartasEnMano, _),
-      	format("es el turno de ~a!~n", [Nombre]),
+tirar_carta(N1, P1) -->
+    estado(S,S),
+    	{select(P, jugadores, S, _),
+        P = jugador(N1, CartasEnMano, _),
 		format("cartas restantes: ~w~n", [CartasEnMano]),
-    	read(C),
-      	member([C], CartasEnMano)
-    },
-    tirar_cartas(Ps, Cs).
+    	read(C1),
+      	member(C1, CartasEnMano),
+        format("el jugador ~a tira la carta: ~w~n", [N1, CartasEnMano]),
+        quitar_carta(N1, C1, P1)}.
 
-tirar_cartas(Ps, Cs) --> tirar_cartas(Ps, Cs).
-      	
+tirar_carta(Ps, Cs, PJs) --> tirar_carta(Ps, Cs, PJs).
     
 crearJugadores(Nombres) -->
     estado(S0, S),
@@ -175,9 +206,4 @@ maximo([X], X).
 maximo([Elem|Cola], Max) :-
     maximo(Cola, Resto),
     Max is max(Elem, Resto).
-
-
-
-
-
 
