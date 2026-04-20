@@ -183,15 +183,15 @@ sumarPuntos(Z) -->
 combinaciones([[Numero1,_]],[Val]):-
     valor_envido(Numero1,Val).
 
-combinaciones([[Palo,Num]|Cola], Resto):-
-    suma([Palo,Num], Cola, Res),
+combinaciones([[Num,Palo]|Cola], Resto):-
+    suma([Num,Palo], Cola, Res),
     combinaciones(Cola,L1),
     append(L1,Res,Resto).
 
 suma([Numero1,_],[],[Val]):-
     valor_envido(Numero1,Val).
 
-suma([Numero1,Palo1], [[Numero2,Palo2]|Cola],[X2, Res|Resto]):-
+suma([Numero1,Palo1], [[Numero2,Palo2]|Cola],[Res|Resto]):-
     Palo1 == Palo2,
     valor_envido(Numero1,X1),
     valor_envido(Numero2,X2),
