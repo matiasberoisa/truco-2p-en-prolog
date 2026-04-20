@@ -13,9 +13,9 @@ puntos_truco([_], [_]).
 
 puntos_envido([_], [_]).
 
-%jugadores([jugador(_, [_], [_]), jugador(_, [_], [_])]).
+jugadores([jugador(_, [_], 0), jugador(_, [_], 0)]).
 
-jugadores([jugador(j1,[[2, espada], [4, oro], [3, espada]],[_]), jugador(j2,[[caballo, copa], [3, copa], [1, copa]],[_])]).
+% jugadores([jugador(j1,[[2, espada], [4, oro], [3, espada]],[_]), jugador(j2,[[caballo, copa], [3, copa], [1, copa]],[_])]).
 
 stock([[rey, oro], [rey, espada], [rey, basto], [rey, copa],
         [caballo, oro], [caballo, espada], [caballo, basto], [caballo, copa],
@@ -74,7 +74,7 @@ mezclar -->
 
 truco -->
     crearJugadores([j1,j2]).
-    %jugar_rondas.
+    jugar_rondas.
     %envido,
     %envido,
     %realEnvido,
@@ -84,48 +84,48 @@ truco -->
     %valeCuatro
 
 jugar_rondas -->
-    estado(S0, _),
-    {select(jugadores([
-            jugador(_,_,[PJ1]),
-            jugador(_,_,[PJ2])
-        ]), S0, _),
+    estado(S0, _), % no me importa el estado de salida, solo me interesa el estado de entrada S0 para obtener los puntos de los jugadores
+    {select(jugadores(Js), S0, _), % Seleccione los jugadores macheando sus puntos de S0
+    % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
+    Js = [jugador(_,_,PJ1), jugador(_,_,PJ2)], % Asegura que Js tenga la forma de una lista con dos jugadores, cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30)},
-    jugar_ronda,
+    jugar_ronda(Js), 
     jugar_rondas.
 
-jugar_rondas -->
-    estado(S, S),
-    {select(jugadores([
-            jugador(N1,_,[PJ1]),
-            jugador(N2,_,[PJ2])
-        ]), S, _),
+jugar_rondas --> % Caso donde se termina el juego, es decir, cuando alguno de los jugadores llega a 30 puntos o mas
+    estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
+    {select(jugadores([jugador(N1,_,PJ1),jugador(N2,_,PJ2)]), S, _), % Seleccione los jugadores macheando sus puntos de S0
+    % Condicional para determinar el ganador, el jugador con mas puntos es el ganador, y se muestra su nombre y puntaje
     (PJ1 #> PJ2 ->
-        format("El ganador es ~w con ~w puntos~n", [N1, PJ1])
+        format("El ganador es ~w con ~w puntos~n", [N1, PJ1])  
     ;
         format("El ganador es ~w con ~w puntos~n", [N2, PJ2])
 	)}.
 
 
-jugar_ronda([]) --> [].
-jugar_ronda([P|Ps]) -->
-    estado(S, S),
-    {	P = jugador(Nombre, CartasEnMano, _),
-      	format("es el turno de ~a!~n", [Nombre]),
+jugar_ronda([]) --> []. % caso base, cuando no hay jugadores, se termina la ronda
+jugar_ronda([P|Ps]) --> % P es el jugador actual, Ps es la lista de jugadores restantes
+    estado(S, S), % no modifica nada solo lee el estado actual
+    {	P = jugador(Nombre, CartasEnMano, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
+      	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
+        format("es el turno de ~a!~n", [Nombre]),
 		format("cartas restantes: ~w~n", [CartasEnMano]),
      	format("OPCIONES: ~w tirar carta,~w cantar truco,
               ~w cantar envido, ~w irse al mazo ~n", [1,2,3,4]),
-    	read(C)},
+    	read(C) % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+        % para determinar que accion se va a realizar dependiendo de la opcion ingresada
+    },
     buscar_opciones(C, Nombre, _),
     jugar_ronda(Ps).
 
-buscar_opciones(C, N, P1) --> 
-    {C #= 1}, tirar_carta(N, P1).
+buscar_opciones(C, Nombre, P1) --> 
+    {C #= 1}, tirar_carta(Nombre, P1).
 
-buscar_opciones(C, N, P1) --> 
-    {C #= 2}, tirar_carta(N, P1).
+buscar_opciones(C, Nombre, P1) --> 
+    {C #= 2}, tirar_carta(Nombre, P1).
 
-buscar_opciones(C, N, P1) --> 
-    {C #= 3}, tirar_carta(N, P1).
+buscar_opciones(C, Nombre, P1) --> 
+    {C #= 3}, tirar_carta(Nombre, P1).
 
 buscar_opciones(C, _, _) --> % N y P1
     {C #= 4}.
@@ -177,7 +177,9 @@ repartir_una_carta([P|Ps], [P1|Ps1], [C|Cs], Cs1) :- % (jugadorAntes, JugadorDes
     P1 = jugador(N, [C|A], B), % Crea un nuemo jugador con P1 asignandole el mismo nombre, solo le agrega la carta
     repartir_una_carta(Ps, Ps1, Cs, Cs1). % Luego llama para hacer lo mismo con el otro jugador
   
-
+% Esta parte no la comente pero se entiende que es la parte de calcular el puntaje del envido,
+% se obtiene las cartas de cada jugador y se calculan las combinaciones posibles 
+% para obtener el puntaje maximo de envido
 sumarPuntos(Z) -->
     [[Numero1,Palo1], [Numero2,Palo2], [Numero3,Palo3]],
     {combinaciones([[Numero1,Palo1], [Numero2,Palo2], [Numero3,Palo3]], X),maximo(X, Z)}.
