@@ -1,7 +1,7 @@
-:- use_module(library(clpfd)).
-:- use_module(library(random)).
+:- use_module(library(clpfd)). % Libreria
+:- use_module(library(random)). % Libreria 
 
-palos([oro, espada, basto, copa]).
+palos([oro, espada, basto, copa]). 
 
 numeros([rey, caballo, sota, 7, 6, 5, 4, 3, 2, 1]).
 
@@ -56,7 +56,7 @@ valor_envido(3, 3).
 valor_envido(2, 2).
 valor_envido(1, 1).
 
-estado(S0, S, S0, S).
+estado(S0, S, S0, S). % estado(EntradaVisible, SalidaVisible, EntradaDCG, SalidaDCG).
 
 carta([Numero,Palo]):-
     palos(ListaPalos),
@@ -65,12 +65,12 @@ carta([Numero,Palo]):-
     member(Palo, ListaPalos).
 
 mezclar -->
-    estado(S0, S),
+    estado(S0, S), % Paso de estado S0 a S
     {
-	select(stock(Cartas), S0, S1),
-	random_permutation(Cartas, CartasMezcladas),
-	S = [stock(CartasMezcladas)|S1]
-    }.
+	select(stock(Cartas), S0, S1), % Saca el stock de cartas de S0 generando S1 sin ese stock
+	random_permutation(Cartas, CartasMezcladas), % Mezcla las cartas
+	S = [stock(CartasMezcladas)|S1] % Añade el stock con las cartas mezcladas con S1 (sin stock(cartas))
+    }. % Se actualiza con el mazo mezclado
 
 truco -->
     crearJugadores([j1,j2]).
@@ -150,30 +150,32 @@ tirar_carta(Ps, Cs, PJs) --> tirar_carta(Ps, Cs, PJs).
 crearJugadores(Nombres) -->
     estado(S0, S),
     {
-        maplist(crearJugador, Nombres, Jugadores),
-      	stock(Cartas),
-        S = [jugadores(Jugadores), stock(Cartas)|S0]
+        maplist(crearJugador, Nombres, Jugadores), % “aplicá crearJugador a cada elemento de Nombres 
+        % y generá Jugadores donde es una lista de jugador(Nombre, [], [_]).
+      	stock(Cartas), % Llama al stock de cartas, obteniendo todas las cartas
+        S = [jugadores(Jugadores), stock(Cartas)|S0] % Almacena todos los jugadores con el stock
     },
-    mezclar,
-    repartir_una_carta,
+    mezclar, % Aca llama a mezclar las cartas
+    repartir_una_carta, % Aca reparte solo una vez las cartas, por eso se llama 3 veces
     repartir_una_carta,
     repartir_una_carta.
 
-repartir_una_carta -->
+repartir_una_carta --> % Se llamara 3 veces
     estado(S0, S),
     {
-        select(jugadores(Jugadores), S0, S1),
-		select(stock(Cartas), S1, S2),
-        repartir_una_carta(Jugadores, Jugadores1, Cartas, Cartas1),
-        S = [jugadores(Jugadores1), stock(Cartas1)|S2]
+        select(jugadores(Jugadores), S0, S1), % Saca los jugadores de S0 y tiene una lista S1 sin esos jugadores
+		select(stock(Cartas), S1, S2), % Saca el stock de cartas mezclada(Ahora solo cartas por la unificacion)
+        % de S1 (Lista actualizada) y queda S2 sin los jugadores y las cartas
+        repartir_una_carta(Jugadores, Jugadores1, Cartas, Cartas1), % Reparte una vez la carta
+        S = [jugadores(Jugadores1), stock(Cartas1)|S2] % Actualiza el estado de los jugadores y el stock de cartas que disminuyo
     }.
 
 repartir_una_carta([], [], Cs, Cs).
-repartir_una_carta(Ps, Ps, [], []).
-repartir_una_carta([P|Ps], [P1|Ps1], [C|Cs], Cs1) :-
-    P = jugador(N, A, B),
-    P1 = jugador(N, [C|A], B),
-    repartir_una_carta(Ps, Ps1, Cs, Cs1).
+repartir_una_carta(Ps, Ps, [], []). %  ????
+repartir_una_carta([P|Ps], [P1|Ps1], [C|Cs], Cs1) :- % (jugadorAntes, JugadorDespues, CartasAntes, CartasDespues)
+    P = jugador(N, A, B), % Afirma que P tiene forma de jugador, no es un igual sino una unificacion
+    P1 = jugador(N, [C|A], B), % Crea un nuemo jugador con P1 asignandole el mismo nombre, solo le agrega la carta
+    repartir_una_carta(Ps, Ps1, Cs, Cs1). % Luego llama para hacer lo mismo con el otro jugador
   
 
 sumarPuntos(Z) -->
