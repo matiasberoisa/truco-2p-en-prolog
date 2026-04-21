@@ -165,7 +165,7 @@ verificar_si_gano([P1, P2], [P1, P2]) -->
         PuntosGanados #= Puntos + 1,
         GanadorActualizado = jugador(NombreP1, [], [PuntosGanados]),
         format("~a gana esta mano!~n", [NombreP1]),
-        S = [ronda(_, [P1, P2])|S1]
+        S = [ronda(_, [GanadorActualizado, P2])|S1]
     }
 
 % El primer parametro es el resultado de la primera mano y el segundo es el de la segunda mano
@@ -186,14 +186,14 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
 		format("cartas restantes: ~w~n", [CartasEnManoP1]),
     	read(C1) % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
-        tirar_carta(NombreP1, C1, CartasEnManoP1, P1Actualizado), % P1 es el jugador actual, se le pasa su nombre, 
+        tirar_carta(P1, C1, P1Actualizado), % P1 es el jugador actual, se le pasa su nombre, 
         % la carta que quiere tirar, sus cartas en mano y se obtiene el nuevo estado del jugador despues de 
         % tirar la carta
         P2 = jugador(NombreP2, CartasEnManoP2, _),
         format("es el turno de ~a!~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
     	read(C2)
-        tirar_carta(NombreP2, C2, CartasEnManoP2, P2Actualizado),
+        tirar_carta(P2, C2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], [Ganador,Perdedor]), % Compara las cartas tiradas por ambos 
         % jugadores y determina quien gana la mano, se obtiene un arreglo con los jugadores actualizados, donde el primer elemento es el ganador y el segundo el perdedor
         Ganador = jugador(NombreGanador, [], [Puntos]),
