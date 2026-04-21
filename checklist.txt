@@ -1,0 +1,20 @@
+X crear jugadores
+X repartir cartas
+X jugar rondas
+jugar_primer_mano --> envido, truco
+jugar_segunda_mano --> truco, termina si P1 gano las 2 manos
+jugar_tercera_mano --> truco, termina
+
+- revisar las rondas, no cambia el orden de los jugadores dependiendo si gano j1 o j2
+- cambiar el metodo de jugar_rondas, se debe agregar otro metodo que agregue el estado S
+en esta seccion
+% poner en otro predicado el cambio de ronda
+    {
+    select(ronda(N, _), S0, S1),
+    select(jugadores([P1, P2]), S1, S2),
+    N1 #= N + 1,
+    S = [ronda(N1, jugadores([P2,P1])),  jugadores([P2,P1])| S2]
+    },
+%hasta aca
+
+- revisar envido, truco DESPUES de que se pueda jugar las rondas

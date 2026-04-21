@@ -7,16 +7,6 @@ numeros([rey, caballo, sota, 7, 6, 5, 4, 3, 2, 1]).
 
 crearJugador(Nombre, jugador(Nombre, [], 0)).
 
-jugador(_, _, _).
-
-puntos_truco([_], [_]).
-
-puntos_envido([_], [_]).
-
-jugadores([jugador(_, [_], _), jugador(_, [_], _)]).
-
-ronda(_,jugadores(_)).
-
 %jugadores([jugador(j1,[[2, espada], [4, oro], [3, espada]],[_]), jugador(j2,[[caballo, copa], [3, copa], [1, copa]],[_])]).
 
 stock([[rey, oro], [rey, espada], [rey, basto], [rey, copa],
@@ -86,18 +76,20 @@ truco -->
     %valeCuatro
 
 jugar_rondas -->
-    estado(S0, S), % no me importa el estado de salida, solo me interesa el estado de entrada S0 para obtener los puntos de los jugadores
-    {select(jugadores(Js), S0, _), % Seleccione los jugadores macheando sus puntos de S0
+    estado(S0, S0), % no me importa el estado de salida, solo me interesa el estado de entrada S0 para obtener los puntos de los jugadores
+    {select(jugadores(Js), S0, S1), % Seleccione los jugadores macheando sus puntos de S0
     % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
     Js = [jugador(_,_,PJ1), jugador(_,_,PJ2)], % Asegura que Js tenga la forma de una lista con dos jugadores, cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30)},
     jugar_primer_mano,
+    % poner en otro predicado el cambio de ronda
     {
     select(ronda(N, _), S0, S1),
     select(jugadores([P1, P2]), S1, S2),
     N1 #= N + 1,
     S = [ronda(N1, jugadores([P2,P1])),  jugadores([P2,P1])| S2]
     },
+    %hasta aca
     jugar_rondas.
 
 jugar_rondas --> % Caso donde se termina el juego, es decir, cuando alguno de los jugadores llega a 30 puntos o mas
@@ -138,7 +130,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
 jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
     estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
     {	
-        member(ronda(NumeroRonda, jugadores([P1, P2])), S), % Verifica si 
+        member(ronda(_, jugadores([P1, P2])), S), % Verifica si 
         P1 = jugador(NombreP1, CartasEnManoP1, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
         format("es el turno de ~a!~n", [NombreP1]),
@@ -173,7 +165,7 @@ verificar_si_gano([P1, P2], [P1, P2]) -->
 
 % El primer parametro es el resultado de la primera mano y el segundo es el de la segunda mano
 % Si no son iguales es porque cada mano la gano un jugador distinto, entonces se juega la tercera
-verificar_si_gano([P1Actualizado, P2Actualizado], [P1nuevo, P2nuevo]) -->
+verificar_si_gano([_, _], [P1nuevo, P2nuevo]) -->
     estado(S0, S),
     {
         select(ronda(N, _), S0, S1), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
@@ -235,9 +227,9 @@ crearJugadores(Nombres) -->
     {
         maplist(crearJugador, Nombres, Jugadores), % “aplicá crearJugador a cada elemento de Nombres 
         % y generá Jugadores donde es una lista de jugador(Nombre, [], [_]).
-      	stock(Cartas), % Llama al stock de cartas, obteniendo todas las cartas
-        ronda(1, jugadores(Jugadores)),
-        S = [ronda(1, jugadores(Jugadores)), jugadores(Jugadores), stock(Cartas)|S0] % Almacena todos los jugadores con el stock
+      	stock(Cartas),
+      	ronda(1, jugadores(Jugadores)),% Llama al stock de cartas, obteniendo todas las cartas
+    	S = [ronda(1, jugadores(Jugadores)),jugadores(Jugadores), stock(Cartas)|S0] % Almacena todos los jugadores con el stock
     },
     mezclar, % Aca llama a mezclar las cartas
     repartir_una_carta, % Aca reparte solo una vez las cartas, por eso se llama 3 veces
@@ -248,10 +240,11 @@ repartir_una_carta --> % Se llamara 3 veces
     estado(S0, S),
     {
         select(jugadores(Jugadores), S0, S1), % Saca los jugadores de S0 y tiene una lista S1 sin esos jugadores
-		select(stock(Cartas), S1, S2), % Saca el stock de cartas mezclada(Ahora solo cartas por la unificacion)
+		select(stock(Cartas), S1, S2),
+      	select(ronda(N,jugadores(_)), S2, S3),% Saca el stock de cartas mezclada(Ahora solo cartas por la unificacion)
         % de S1 (Lista actualizada) y queda S2 sin los jugadores y las cartas
         repartir_una_carta(Jugadores, Jugadores1, Cartas, Cartas1), % Reparte una vez la carta
-        S = [jugadores(Jugadores1), stock(Cartas1)|S2] % Actualiza el estado de los jugadores y el stock de cartas que disminuyo
+        S = [ronda(N,jugadores(Jugadores1)), jugadores(Jugadores1), stock(Cartas1)|S3] % Actualiza el estado de los jugadores y el stock de cartas que disminuyo
     }.
 
 repartir_una_carta([], [], Cs, Cs).
@@ -294,4 +287,3 @@ maximo([X], X).
 maximo([Elem|Cola], Max) :-
     maximo(Cola, Resto),
     Max is max(Elem, Resto).
-
