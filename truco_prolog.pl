@@ -15,7 +15,7 @@ puntos_envido([_], [_]).
 
 jugadores([jugador(_, [_], 0), jugador(_, [_], 0)]).
 
-rondas(_,_).
+rondas(_,jugadores(_)).
 
 % jugadores([jugador(j1,[[2, espada], [4, oro], [3, espada]],[_]), jugador(j2,[[caballo, copa], [3, copa], [1, copa]],[_])]).
 
@@ -112,7 +112,7 @@ jugar_rondas --> % Caso donde se termina el juego, es decir, cuando alguno de lo
 
 
 jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
-    estado(S0, S), % no modifica nada solo lee el estado actual
+    estado(S0, S),
     {	
         select(jugadores([P1, P2]), S0, S1), % Saca los jugadores de S0 generando S1 sin esos jugadores
         P1 = jugador(NombreP1, CartasEnManoP1, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
@@ -127,7 +127,6 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         P2 = jugador(NombreP2, CartasEnManoP2, _),
         format("es el turno de ~a!~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
-        member(C2, CartasEnManoP2),
     	read(C2)
         tirar_carta(NombreP2, C2, CartasEnManoP2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], ArregloJugadores), % Compara las cartas tiradas por ambos 
@@ -137,7 +136,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
     jugar_segunda_mano. 
 
 jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
-    estado(S0, S), % no modifica nada solo lee el estado actual
+    estado(S0, S), 
     {	
         select(jugadores([P1, P2]), S0, S1), % Saca los jugadores de S0 generando S1 sin esos jugadores
         P1 = jugador(NombreP1, CartasEnManoP1, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
@@ -152,7 +151,6 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         P2 = jugador(NombreP2, CartasEnManoP2, _),
         format("es el turno de ~a!~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
-        member(C2, CartasEnManoP2),
     	read(C2)
         tirar_carta(NombreP2, C2, CartasEnManoP2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], [P1nuevo, P2nuevo]), % Compara las cartas tiradas por ambos 
@@ -167,7 +165,7 @@ verificar_si_gano([P1, P2], [P1, P2]) -->
         PuntosGanados #= Puntos + 1,
         GanadorActualizado = jugador(NombreP1, [], [PuntosGanados]),
         format("~a gana esta mano!~n", [NombreP1]),
-        S = [jugadores([P2, P1])|S1]
+        S = [jugadores([P2, P1])|S1] ????
     }
 
 verificar_si_gano([P1Actualizado, P2Actualizado], [P1nuevo, P2nuevo]) -->
@@ -192,7 +190,6 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         P2 = jugador(NombreP2, CartasEnManoP2, _),
         format("es el turno de ~a!~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
-        member(C2, CartasEnManoP2),
     	read(C2)
         tirar_carta(NombreP2, C2, CartasEnManoP2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], [Ganador,Perdedor]), % Compara las cartas tiradas por ambos 
