@@ -18,3 +18,9 @@ en esta seccion
 %hasta aca
 
 - revisar envido, truco DESPUES de que se pueda jugar las rondas
+
+para probar
+trace,(truco([],E))
+
+para ver los parametros
+listing(truco)
