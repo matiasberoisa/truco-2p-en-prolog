@@ -24,3 +24,9 @@ trace,(truco([],E))
 
 para ver los parametros
 listing(truco)
+
+PARA EL INFORME:
+- poner teoria de DCG, notacion semicontextual y estado
+- poner reglamento de truco
+- explicar cada DCG y predicado que se use
+- poner codigo completo

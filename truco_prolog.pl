@@ -78,7 +78,7 @@ mezclar -->
     {
 	stock(Cartas), % Llama al stock de cartas, obteniendo todas las cartas
 	random_permutation(Cartas, CartasMezcladas), % Mezcla las cartas
-	S = [stock(CartasMezcladas)|S0] % Añade el stock con las cartas mezcladas con S1 (sin stock(cartas))
+	S = [stock(CartasMezcladas), envido(0,_), truco(1)|S0] % Añade el stock con las cartas mezcladas con S1 (sin stock(cartas))
     }. % Se actualiza con el mazo mezclado
 
 repartir_una_carta --> % Se llamara 3 veces
@@ -105,9 +105,8 @@ jugar_rondas -->
     repartir_una_carta, % Aca reparte solo una vez las cartas, por eso se llama 3 veces
     repartir_una_carta,
     repartir_una_carta,
-    {select(jugadores(Js), S0, _), % Seleccione los jugadores macheando sus puntos de S0
+    {select(jugadores([jugador(_,_,PJ1), jugador(_,_,PJ2)]), S0, _), % Seleccione los jugadores macheando sus puntos de S0
     % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
-    Js = [jugador(_,_,PJ1), jugador(_,_,PJ2)], % Asegura que Js tenga la forma de una lista con dos jugadores, 
     % cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30)},
     jugar_primer_mano,
@@ -119,7 +118,7 @@ jugar_rondas --> % Caso donde se termina el juego, es decir, cuando alguno de lo
     {select(jugadores([jugador(N1,_,PJ1),jugador(N2,_,PJ2)]), S, _), % Seleccione los jugadores macheando sus puntos de S0
     % Condicional para determinar el ganador, el jugador con mas puntos es el ganador, y se muestra su nombre y puntaje
     (PJ1 #> PJ2 ->
-        format("El ganador es ~w con ~w puntos~n", [N1, PJ1])  
+        format("El ganador es ~w con ~w puntos~n", [N1, PJ1])
     ;
         format("El ganador es ~w con ~w puntos~n", [N2, PJ2])
 	)}.
@@ -130,14 +129,26 @@ cambiar_ronda -->
     select(ronda(R, jugadores(Js)), S0, S1),
     select(jugadores([jugador(Nombre1, _, _), jugador(Nombre2, _, _)]), S1, S2),
     select(stock(_), S2, S3),
+    select(envido(PuntosEnvido, GanadorEnvido), S3, S4),
+    select(truco(PuntosTruco), S4, S5),
 	(
-    Js = [jugador(Nombre1, _, PJ1), jugador(Nombre2, _, PJ2)]
+    Js = [jugador(Ganador, _, PJ1), jugador(Perdedor, _, PJ2)]
 	;
-    Js = [jugador(Nombre2, _, PJ2), jugador(Nombre1, _, PJ1)]
+    Js = [jugador(Ganador, _, PJ2), jugador(Perdedor, _, PJ1)]
 	),
     R1 #= R + 1,
-    S = [ronda(R1, jugadores([jugador(Nombre2,[],PJ2),jugador(Nombre1,[],PJ1)])),  jugadores([jugador(Nombre2,[],PJ2),jugador(Nombre1,[],PJ1)])| S3]
+    PuntosGanados #= PuntosGanador1 + PuntosTruco,
+    (GanadorEnvido = Ganador,
+     PuntosGanador = PJ1 + PuntosTruco + PuntosEnvido, PuntosPerdedor = PJ2);
+    (GanadorEnvido = Perdedor,
+     PuntosGanador = PJ1 + PuntosTruco, PuntosPerdedor = PJ2 + PuntosEnvido),
+    GanadorActualizado = jugador(Ganador, [], PuntosGanador),
+    PerdedorActualizado = jugador(Perdedor, [], PuntosPerdedor),
+    S = [ronda(R1, jugadores([PerdedorActualizado, GanadorActualizado])),
+      jugadores([PerdedorActualizado, GanadorActualizado])| S5]
     }.
+
+
 
 
 jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
@@ -147,23 +158,98 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         P1 = jugador(NombreP1, CartasEnManoP1, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
     	format("//////////RONDA N° ~w//////////~n", [NumeroRonda]),
-        format("es el turno de ~a!~n", [NombreP1]),
-		format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
+        format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        read(Respuesta),
+        accion(Respuesta),
+        format("cartas restantes: ~w~n", [CartasEnManoP1]),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+        format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
-        tirar_carta(P1, C1, P1Actualizado), % P1 es el jugador actual, se le pasa su nombre, 
         % la carta que quiere tirar, sus cartas en mano y se obtiene el nuevo estado del jugador despues de 
         % tirar la carta
         P2 = jugador(NombreP2, CartasEnManoP2, _),
-        format("es el turno de ~a!~n", [NombreP2]),
+        format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
+        read(Respuesta),
+        accion(Respuesta),
+        format("cartas restantes: ~w~n", [CartasEnManoP2]),
     	read(C2),
+        format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
+        tirar_carta(P1, C1, P1Actualizado),
         tirar_carta(P2, C2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], ArregloJugadores), % Compara las cartas tiradas por ambos 
         % jugadores y determina quien gana la mano, se obtiene un arreglo con los jugadores actualizados
         S = [ronda(NumeroRonda, jugadores(ArregloJugadores))|S1] % Actualiza el estado con los jugadores actualizados despues de jugar la mano, se mantiene el resto del estado igual a S1
     },
     jugar_segunda_mano. 
+
+
+accion (R, NombreAccion) -->
+    estado(S0, S),
+    {
+    (
+        R = 1,
+        select(envido(0, _), S0, S1), % Saca el estado con el envido de S0 generando S1 sin ese estado
+        S = [envido(0, NombreAccion)|S1], % Actualiza el estado con el nuevo envido cantado 
+        envido_querido, 
+        format("El jugador canta el envido!~n")
+    );
+    (
+        R = 1,
+        select(envido(PuntosEnvido, _), S0, S1), % Saca el estado con el envido de S0 generando S1 sin ese estado
+        PuntosEnvido #> 0, % Verifica que el envido ya haya sido cantado, para poder cantar un nuevo envido
+        S = S0, % No se actualiza el estado porque no se puede cantar un nuevo envido, se mantiene el mismo estado
+        format("No se puede cantar envido, ya fue cantado!~n")
+    );
+    (R = 2, format("El jugador canta el truco!~n"));
+    (R = 3);
+    (R = 4, format("El jugador se va al mazo~n"))
+    }.
+
+envido_querido --> 
+    estado(S0, S),
+    {
+        select(ronda(N, jugadores(Js)), S0, S1), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
+        select(envido(0, NombreCanto), S1, S2), % Saca el estado con el envido de S1 generando S2 sin ese estado
+        Js = [jugador(NombreP1, CartasEnManoP1, _), jugador(NombreP2, CartasEnManoP2, _)],
+
+        format("~a canta envido! ~n aceptar: Y ~n rechazar: N", [NombreCanto]),
+        read(Res),
+        (
+        Res = 'Y', 
+        sumarPuntos(CartasEnManoP1, PuntosEnvidoP1), % Calcula el puntaje de envido del jugador 1
+        sumarPuntos(CartasEnManoP2, PuntosEnvidoP2), % Calcula el puntaje de envido del otro jugador
+        (PuntosEnvidoP1 >= PuntosEnvidoP2, Ganador = NombreP1)
+        ;
+        (PuntosEnvidoP1 < PuntosEnvidoP2, Ganador = NombreP2),
+        PuntosEnvido #= 2
+        )
+        ;
+        (
+        Res = 'N',
+        PuntosEnvido #= 1,
+        Ganador = NombreCanto
+        ),
+        
+        S = [ronda(N, jugadores(Js)), envido(PuntosEnvido, Ganador)|S2] % Actualiza el estado con el nuevo puntaje del jugador que canto envido
+    }.
+    
+cantar_truco -->
+    estado(S0,S),
+    {
+        select(truco(NivelTruco), S0, S1), % Saca el estado con el nivel de truco de S0 generando S1 sin ese estado
+        NuevoNivelTruco #= NivelTruco + 1, % Aumenta el nivel de truco
+        S = [truco(NuevoNivelTruco)|S1] % Actualiza el estado con el nuevo nivel de truco
+    }
+
+no_quiero_truco -->
+    estado(S0,S),
+    {
+        select(truco(NivelTruco), S0, S1), % Saca el estado con el nivel de truco de S0 generando S1 sin ese estado
+        NuevoNivelTruco #= NivelTruco - 1, % Disminuye el nivel de truco, indicando que se rechazo el truco
+        S = [truco(NuevoNivelTruco)|S1] % Actualiza el estado con el nivel de truco en 0, indicando que se acepto el truco
+    }.
 
 jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
     estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
@@ -174,6 +260,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         format("es el turno de ~a!~n", [NombreP1]),
 		format("cartas restantes: ~w~n", [CartasEnManoP1]),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+        format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         tirar_carta(P1, C1, P1Actualizado), % Pasamos el jugador completo y la carta que quiere tirar, y
         % se obtiene el nuevo estado del jugador despues de tirar la carta
@@ -181,6 +268,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         format("es el turno de ~a!~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
     	read(C2),
+        format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P2, C2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], [P1nuevo, P2nuevo]) % Compara las cartas tiradas por ambos 
         % jugadores y determina quien gana la mano, se obtiene un arreglo con los jugadores actualizados
@@ -214,12 +302,12 @@ verificar_si_gano([_, _], [P1nuevo, P2nuevo]) -->
 jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
     estado(S0, S), % no modifica nada solo lee el estado actual
     {	
-        select(ronda(NumeroRonda, jugadores([P1, P2])), S0, S1), % Saca los jugadores de S0 generando S1 sin esos jugadores
-        P1 = jugador(NombreP1, CartasEnManoP1, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
+        select(ronda(NumeroRonda, jugadores([jugador(NombreP1, CartasEnManoP1, _), jugador(NombreP2, CartasEnManoP2, _)])), S0, S1), % Saca los jugadores de S0 generando S1 sin esos jugadores
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
         format("es el turno de ~a!~n", [NombreP1]),
 		format("cartas restantes: ~w~n", [CartasEnManoP1]),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+        format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         tirar_carta(P1, C1, P1Actualizado), % P1 es el jugador actual, se le pasa su nombre, 
         % la carta que quiere tirar, sus cartas en mano y se obtiene el nuevo estado del jugador despues de 
@@ -228,21 +316,21 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         format("es el turno de ~a!~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
     	read(C2),
+        format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P2, C2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], [Ganador,Perdedor]), % Compara las cartas tiradas por ambos 
         % jugadores y determina quien gana la mano, se obtiene un arreglo con los jugadores actualizados, donde el primer elemento es el ganador y el segundo el perdedor
-        Ganador = jugador(NombreGanador, [], Puntos),
-        PuntosGanados #= Puntos + 1,
-        GanadorActualizado = jugador(NombreGanador, [], PuntosGanados),
+        Ganador = jugador(NombreGanador, [], _),
+        Perdedor = jugador(NombrePerdedor, [], _),
         format("~a gana esta ronda!~n", [NombreGanador]),
-        S = [ronda(NumeroRonda, jugadores([Perdedor, GanadorActualizado]))|S1]
+        S = [ronda(NumeroRonda, jugadores([Perdedor, Ganador]))|S1]
     }.
+    
 
 
 tirar_carta(Jugador, CartaUsada, NuevoEstadoJugador) :-
     Jugador = jugador(Nombre, CartasEnMano, Puntos), % Pattern matching para obtener el nombre, las cartas en mano y los puntos del jugador
     member(CartaUsada, CartasEnMano),
-    format("el jugador ~a tira la carta: ~w~n", [Nombre, CartaUsada]),
     select(CartaUsada, CartasEnMano, ManoActualizada), % Saca la carta usada de las cartas en mano del jugador
     NuevoEstadoJugador = jugador(Nombre, ManoActualizada, Puntos). % Crea un nuevo estado del jugador con las cartas actualizadas y los mismos puntos
 
@@ -268,9 +356,8 @@ comparar_cartas([NumeroJ1, PaloJ1], [NumeroJ2, PaloJ2], [P1, P2], [P2, P1]) :-
 % Esta parte no la comente pero se entiende que es la parte de calcular el puntaje del envido,
 % se obtiene las cartas de cada jugador y se calculan las combinaciones posibles 
 % para obtener el puntaje maximo de envido
-sumarPuntos(Z) -->
-    [[Numero1,Palo1], [Numero2,Palo2], [Numero3,Palo3]],
-    {combinaciones([[Numero1,Palo1], [Numero2,Palo2], [Numero3,Palo3]], X),maximo(X, Z)}.
+sumarPuntos([[Numero1,Palo1], [Numero2,Palo2], [Numero3,Palo3]], Z) :-
+    combinaciones([[Numero1,Palo1], [Numero2,Palo2], [Numero3,Palo3]], X),maximo(X, Z).
 
 combinaciones([[Numero1,_]],[Val]):-
     valor_envido(Numero1,Val).
