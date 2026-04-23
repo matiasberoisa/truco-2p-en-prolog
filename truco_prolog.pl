@@ -109,6 +109,7 @@ jugar_rondas -->
     % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
     % cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30)},
+    %catch(phrase(jugar_primer_mano, S0, S1),irse_al_mazo,S1 = S0)}, para irse al mazo
     jugar_primer_mano,
     cambiar_ronda,
     jugar_rondas.
@@ -161,7 +162,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
         format("cartas restantes: ~w~n", [CartasEnManoP1]),
         read(Respuesta),
-        phrase(accion(Respuesta, NombreP1), S0, S1),
+        phrase(accion(Respuesta, NombreP1), S0, S1), %agregue esto
         format("cartas restantes: ~w~n", [CartasEnManoP1]),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
@@ -172,7 +173,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
         read(Respuesta),
-        phrase(accion(Respuesta, NombreP2), S0, S1),
+        phrase(accion(Respuesta, NombreP2), S0, S1), %agregue esto
         format("cartas restantes: ~w~n", [CartasEnManoP2]),
     	read(C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
@@ -205,7 +206,7 @@ accion(R, NombreAccion) -->
     );
     (R = 2, format("El jugador canta el truco!~n"));
     (R = 3);
-    (R = 4, format("El jugador se va al mazo~n"))
+    (R = 4, format("El jugador se va al mazo~n"), throw(irse_al_mazo))
     }.
 
 envido_querido --> 
