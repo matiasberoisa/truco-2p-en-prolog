@@ -51,13 +51,6 @@ estado(S0, S, S0, S). % estado(EntradaVisible, SalidaVisible, EntradaDCG, Salida
 truco -->
     crearJugadores([j1,j2]),
     jugar_rondas.
-    %envido,
-    %envido,
-    %realEnvido,
-    %faltaEnvido,
-    %truco,
-    %retruco,
-    %valeCuatro
 
 carta([Numero,Palo]):-
     palos(ListaPalos),
@@ -108,9 +101,8 @@ jugar_rondas -->
     {select(jugadores([jugador(_,_,PJ1), jugador(_,_,PJ2)]), S0, _), % Seleccione los jugadores macheando sus puntos de S0
     % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
     % cada jugador con su nombre, cartas en mano y puntos
-    (PJ1 #< 30, PJ2 #< 30)},
-    %catch(phrase(jugar_primer_mano, S0, S1),irse_al_mazo,S1 = S0)}, para irse al mazo
-    jugar_primer_mano,
+    (PJ1 #< 30, PJ2 #< 30),
+    catch(phrase(jugar_primer_mano, S0, S1),irse_al_mazo,S1 = S0)}, %para irse al mazo
     cambiar_ronda,
     jugar_rondas.
 
@@ -162,8 +154,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
         format("cartas restantes: ~w~n", [CartasEnManoP1]),
         read(Respuesta),
-        phrase(accion(Respuesta, NombreP1), S0, S1), %agregue esto
-        format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        phrase(accion(Respuesta, NombreP1), S0, S1),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
@@ -173,8 +164,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
         read(Respuesta),
-        phrase(accion(Respuesta, NombreP2), S0, S1), %agregue esto
-        format("cartas restantes: ~w~n", [CartasEnManoP2]),
+        phrase(accion(Respuesta, NombreP2), S0, S1),
     	read(C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
@@ -205,8 +195,16 @@ accion(R, NombreAccion) -->
         format("No se puede cantar envido, ya fue cantado!~n")
     );
     (R = 2, format("El jugador canta el truco!~n"));
-    (R = 3);
-    (R = 4, format("El jugador se va al mazo~n"), throw(irse_al_mazo))
+    (R = 3, format("Que carta tira?~n"));
+    (R = 4, format("El jugador se va al mazo~n"),
+    	select(ronda(NumeroRonda, jugadores(Js)), S0, S1),
+        (
+    	Js = [jugador(Perdedor, _, PJ1), jugador(Ganador, _, PJ2)]% caso 1: J1 se va al mazo
+		;
+    	Js = [jugador(Ganador, _, PJ1), jugador(Perdedor, _, PJ2)]% caso 2: J2 se va al mazo
+		),
+        S = [ronda(NumeroRonda, jugadores([Ganador, Perdedor]))|S1],
+    throw(irse_al_mazo))
     }.
 
 envido_querido --> 
