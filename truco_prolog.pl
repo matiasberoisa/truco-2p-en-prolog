@@ -49,14 +49,12 @@ valor_envido(1, 1).
 estado(S0, S, S0, S). % estado(EntradaVisible, SalidaVisible, EntradaDCG, SalidaDCG).
 
 truco -->
+    %{format("ingrese nombre del jugador 1:~n"),
+    %read(J1),
+    %format("ingrese nombre del jugador 2:~n"),
+    %read(J2)},
     crearJugadores([j1,j2]),
     jugar_rondas.
-
-carta([Numero,Palo]):-
-    palos(ListaPalos),
-    numeros(ListaNumeros),
-    member(Numero, ListaNumeros),
-    member(Palo, ListaPalos).
 
 crearJugadores(Nombres) -->
     estado(S0, S),
@@ -156,7 +154,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
         format("cartas restantes: ~w~n", [CartasEnManoP1]),
         read(Respuesta),
-    	accion(Respuesta, NombreP1, S0, S1),
+    	accion(Respuesta, NombreP1, S0, S2),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
@@ -166,16 +164,16 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
         read(Respuesta1),
-        accion(Respuesta1, NombreP2, S0, S1),
+        accion(Respuesta1, NombreP2, S2, S3),
     	read(C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
         tirar_carta(P2, C2, P2Actualizado),
         comparar_cartas(C1, C2, [P1Actualizado, P2Actualizado], ArregloJugadores), % Compara las cartas tiradas por ambos 
         % jugadores y determina quien gana la mano, se obtiene un arreglo con los jugadores actualizados
-        S = [ronda(NumeroRonda, jugadores(ArregloJugadores))|S1] % Actualiza el estado con los jugadores actualizados despues de jugar la mano, se mantiene el resto del estado igual a S1
+        S = [ronda(NumeroRonda, jugadores(ArregloJugadores))|S3] % Actualiza el estado con los jugadores actualizados despues de jugar la mano, se mantiene el resto del estado igual a S1
     },
-    jugar_segunda_mano. 
+    jugar_segunda_mano.
 
 accion(1, NombreAccion) -->
     estado(S0, S),
@@ -239,7 +237,7 @@ envido_querido -->
 
         format("~a canta envido! ~n aceptar: Y ~n rechazar: N", [NombreCanto]),
         read(Res),
-        ( Res = 'Y' ->
+        ( Res = y ->
     	sumarPuntos(CartasEnManoP1, PuntosEnvidoP1),
     	sumarPuntos(CartasEnManoP2, PuntosEnvidoP2),
     	( PuntosEnvidoP1 >= PuntosEnvidoP2 ->
@@ -247,9 +245,10 @@ envido_querido -->
     	;
         	Ganador = NombreP2
     	),
-    	PuntosEnvido #= 2
+    	PuntosEnvido #= 2,
+        format("~a gano el envido! ~n", [Ganador])
 		;
-    	Res = 'N' ->
+    	Res = n ->
     	PuntosEnvido #= 1,
     	Ganador = NombreCanto
 		),
@@ -273,19 +272,23 @@ no_quiero_truco -->
     }.
 
 jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
-    estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
+    estado(S, S2), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
     {	
         member(ronda(_, jugadores([P1, P2])), S), % Verifica si 
         P1 = jugador(NombreP1, CartasEnManoP1, _), % pattern matching para obtener el nombre y las cartas en mano del jugador actual
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
         P2 = jugador(NombreP2, CartasEnManoP2, _),
-    	format("es el turno de ~a!~n", [NombreP1]),
-		format("cartas restantes: ~w~n", [CartasEnManoP1]),
+		format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP1]),
+        format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        read(Res),
+        accion(Res, NombreP1, S, S1),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
-        format("es el turno de ~a!~n", [NombreP2]),
-		format("cartas restantes: ~w~n", [CartasEnManoP2]),
+        format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP1]),
+        format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        read(Res),
+        accion(Res, NombreP1, S2, S3),
     	read(C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
       	tirar_carta(P1, C1, P1Actualizado),
@@ -326,13 +329,17 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
         P1 = jugador(NombreP1, CartasEnManoP1, _),
     	P2 = jugador(NombreP2, CartasEnManoP2, _),
-    	format("es el turno de ~a!~n", [NombreP1]),
-		format("cartas restantes: ~w~n", [CartasEnManoP1]),
+    	format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP1]),
+        format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        read(Res),
+        accion(Res, NombreP1, S1, S2),
     	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
-        format("es el turno de ~a!~n", [NombreP2]),
-		format("cartas restantes: ~w~n", [CartasEnManoP2]),
+        format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP1]),
+        format("cartas restantes: ~w~n", [CartasEnManoP1]),
+        read(Res),
+        accion(Res, NombreP1, S2, S3),
     	read(C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
@@ -341,7 +348,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         % jugadores y determina quien gana la mano, se obtiene un arreglo con los jugadores actualizados, donde el primer elemento es el ganador y el segundo el perdedor
         Ganador = jugador(NombreGanador, [], _),
         format("~a gana esta ronda!~n", [NombreGanador]),
-        S = [ronda(NumeroRonda, jugadores([Perdedor, Ganador]))|S1]
+        S = [ronda(NumeroRonda, jugadores([Perdedor, Ganador]))|S3]
     }.
     
 
