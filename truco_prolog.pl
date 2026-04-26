@@ -152,11 +152,10 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
     	format("//////////RONDA N° ~w//////////~n", [NumeroRonda]),
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
-        format("cartas restantes: ~w~n", [CartasEnManoP1]),
-        read(Respuesta),
-    	accion_primer_mano(Respuesta, NombreP1, S0, S2),
+      	format("cartas restantes: ~w~n", [CartasEnManoP1]),
+    	cargar_accion_primer_mano(NombreP1, S0, S2),
         format("Que carta tira?~n"),
-    	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+      	cargarCarta(CartasEnManoP1, C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         % la carta que quiere tirar, sus cartas en mano y se obtiene el nuevo estado del jugador despues de 
@@ -167,7 +166,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         read(Respuesta1),
         accion_primer_mano(Respuesta1, NombreP2, S2, S3),
         format("Que carta tira?~n"),
-    	read(C2),
+    	cargarCarta(CartasEnManoP2, C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
         tirar_carta(P2, C2, P2Actualizado),
@@ -320,7 +319,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         read(Res),
         accion(Res, NombreP1, S, S1),
         format("Que carta tira?~n"),
-    	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+    	cargarCarta(CartasEnManoP1, C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP2]),
@@ -328,7 +327,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         read(Res),
         accion(Res, NombreP1, S1, S2),
         format("Que carta tira?~n"),
-    	read(C2),
+    	cargarCarta(CartasEnManoP2, C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
       	tirar_carta(P1, C1, P1Actualizado),
         tirar_carta(P2, C2, P2Actualizado),
@@ -373,14 +372,14 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         read(Res),
         accion(Res, NombreP1, S1, S2),
         format("Que carta tira?~n"),
-    	read(C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
+    	cargarCarta(CartasEnManoP1, C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP2]),
         format("cartas restantes: ~w~n", [CartasEnManoP2]),
         read(Res),
         accion(Res, NombreP1, S2, S3),
-    	read(C2),
+    	cargarCarta(CartasEnManoP2, C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
         tirar_carta(P2, C2, P2Actualizado),
@@ -445,3 +444,30 @@ maximo([X], X).
 maximo([Elem|Cola], Max) :-
     maximo(Cola, Resto),
     Max is max(Elem, Resto).
+
+cargarCarta(CartasEnMano, Respuesta) :-
+    format("cartas restantes: ~w~n", [CartasEnMano]),
+    repetir(CartasEnMano, Respuesta).
+
+repetir(CartasEnMano, Respuesta) :-
+    read(Opcion),
+    member(Opcion, CartasEnMano),
+    Respuesta = Opcion.
+
+repetir(CartasEnMano, Respuesta):-
+    format("opcion invalida, ingrese nuevamente~n"),
+    repetir(CartasEnMano, Respuesta).
+
+cargar_accion_primer_mano(NombreP) -->
+    {repetirAccion(Respuesta)},
+    accion_primer_mano(Respuesta, NombreP).
+
+repetirAccion(Respuesta) :-
+    read(Opcion),
+    Opcion #< 5,
+    Opcion #> 0,
+    Respuesta = Opcion.
+
+repetirAccion(Respuesta):-
+    format("opcion invalida, ingrese nuevamente~n"),
+    repetirAccion(Respuesta).
