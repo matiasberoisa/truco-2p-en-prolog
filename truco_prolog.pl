@@ -53,7 +53,7 @@ truco -->
     %read(J1),
     %format("ingrese nombre del jugador 2:~n"),
     %read(J2)},
-    crearJugadores([j1,j2]),
+    crearJugadores([j1,j2]),%[J1,J2]
     jugar_rondas.
 
 crearJugadores(Nombres) -->
@@ -126,10 +126,13 @@ cambiar_ronda -->
     select(truco(PuntosTruco), S4, S5),
     Js = [jugador(Ganador, _, PG), jugador(Perdedor, _, PP)],
     R1 #= R + 1,
+    
     (GanadorEnvido = Ganador ->
-    PuntosGanador #= PG + PuntosTruco + PuntosEnvido,PuntosPerdedor #= PP
+    PuntosGanador #= PG + PuntosTruco + PuntosEnvido,
+    	PuntosPerdedor #= PP
 	;
-    PuntosGanador #= PG + PuntosTruco,PuntosPerdedor #= PP + PuntosEnvido
+    PuntosGanador #= PG + PuntosTruco,
+        PuntosPerdedor #= PP + PuntosEnvido
 	),
     GanadorActualizado = jugador(Ganador, [], PuntosGanador),
     PerdedorActualizado = jugador(Perdedor, [], PuntosPerdedor),
@@ -204,11 +207,9 @@ verificar_si_gano([P1, P2], [P1, P2]) -->
     estado(S0, S),
     {
         select(ronda(N, _), S0, S1), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
-        P1 = jugador(NombreP1, [_], Puntos),
-        PuntosGanados #= Puntos + 1,
-        GanadorActualizado = jugador(NombreP1, [], PuntosGanados),
+        P1 = jugador(NombreP1, [_], _),
         format("~a gana esta ronda!~n", [NombreP1]),
-        S = [ronda(N, jugadores([GanadorActualizado, P2]))|S1]
+        S = [ronda(N, jugadores([P1, P2]))|S1]
     }.
 
 % El primer parametro es el resultado de la primera mano y el segundo es el de la segunda mano
@@ -254,8 +255,9 @@ accion_primer_mano(1, NombreAccion) -->
     estado(S0, S),
     {
         select(envido(0, _), S0, S1), % Saca el estado con el envido de S0 generando S1 sin ese estado
-        S = [envido(0, NombreAccion)|S1]}, % Actualiza el estado con el nuevo envido cantado 
-        envido_querido.
+        S = [envido(0, NombreAccion)|S1]
+    }, % Actualiza el estado con el nuevo envido cantado 
+    envido_querido.
 
 accion_primer_mano(1, _) -->
     estado(S0, S),
@@ -268,23 +270,37 @@ accion_primer_mano(1, _) -->
 
 accion_primer_mano(2, NombreAccion) -->
     estado(S0, S),
+    cantar_truco,
     {format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
-    read(Res),
-    (
-        Res = y -> cantar_truco(S0, S),
-        format("QUIERO~n")
-    ;
-        no_quiero_truco(S0, S1),
+    read(Res)
+    },
+    accion_truco_decision(Res, NombreAccion). % es basicamente quiero o no quiero el truco.
+    
+accion_truco_decision(Res, NombreAccion) -->
+    estado(S,S),
+    {
+    	Res = y,
+      	format("QUIERO~n")
+    }.
+
+accion_truco_decision(Res,NombreAccion) -->
+    estado(S0,S),
+    {
+    	Res = n
+    },
+    no_quiero_truco,
+    {
         format("NO QUIERO~n"),
-        select(ronda(NumeroRonda, jugadores(Js)), S1, S2),
+        select(ronda(NumeroRonda, jugadores(Js)), S0, S1),
         (
             Js = [jugador(NombreAccion,_,_), jugador(NoQuiso,_,_)]
         ;
             Js = [jugador(NoQuiso,_,_), jugador(NombreAccion,_,_)]
         ),
-        S = [ronda(NumeroRonda, jugadores([NombreAccion, NoQuiso]))|S2],
+        S = [ronda(NumeroRonda, jugadores([NombreAccion, NoQuiso]))|S1],
         throw(irse_al_mazo)
-    )}.
+    }.  
+    
 
 accion_primer_mano(3, _) --> [].
 
@@ -304,23 +320,11 @@ accion_primer_mano(4, NombreAccion) -->
 
 accion(1, NombreAccion) -->
     estado(S0, S),
+    cantar_truco,
     {format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
-    read(Res),
-    (
-        Res = y -> cantar_truco(S0, S),
-        format("QUIERO~n")
-    ;
-        no_quiero_truco(S0, S1),
-        format("NO QUIERO~n"),
-        select(ronda(NumeroRonda, jugadores(Js)), S1, S2),
-        (
-            Js = [jugador(NombreAccion,_,_), jugador(NoQuiso,_,_)]
-        ;
-            Js = [jugador(NoQuiso,_,_), jugador(NombreAccion,_,_)]
-        ),
-        S = [ronda(NumeroRonda, jugadores([NombreAccion, NoQuiso]))|S2],
-        throw(irse_al_mazo)
-    )}.
+    read(Res)
+    },
+    accion_truco_decision(Res, NombreAccion).
 
 accion(2, _) --> [].
 
@@ -341,7 +345,7 @@ accion(3, NombreAccion) -->
 envido_querido --> 
     estado(S0, S),
     {
-        select(ronda(N, jugadores(Js)), S0, S1), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
+        select(ronda(_, jugadores(Js)), S0, S1), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
         select(envido(0, NombreCanto), S1, S2), % Saca el estado con el envido de S1 generando S2 sin ese estado
         Js = [jugador(NombreP1, CartasEnManoP1, _), jugador(NombreP2, CartasEnManoP2, _)],
 
@@ -350,6 +354,9 @@ envido_querido -->
         ( Res = y ->
     	sumarPuntos(CartasEnManoP1, PuntosEnvidoP1),
     	sumarPuntos(CartasEnManoP2, PuntosEnvidoP2),
+       	format("puntos del envido: ~n"),
+        format("~a: ~w ~n", [NombreP1, PuntosEnvidoP1]),
+        format("~a: ~w ~n", [NombreP2, PuntosEnvidoP2]),
     	( PuntosEnvidoP1 >= PuntosEnvidoP2 ->
         	Ganador = NombreP1
     	;
@@ -362,7 +369,7 @@ envido_querido -->
     	PuntosEnvido #= 1,
     	Ganador = NombreCanto
 		),
-        S = [ronda(N, jugadores(Js)), envido(PuntosEnvido, Ganador)|S2] % Actualiza el estado con el nuevo puntaje del jugador que canto envido
+        S = [envido(PuntosEnvido, Ganador)|S2] % Actualiza el estado con el nuevo puntaje del jugador que canto envido
     }.
     
 cantar_truco -->
