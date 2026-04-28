@@ -103,6 +103,7 @@ jugar_rondas -->
     % cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30),
     catch(jugar_primer_mano(S1,S2), irse_al_mazo(S2), true) %para irse al mazo
+    % jugar_primer_mano(S1,S2)
     },
     cambiar_ronda,
     jugar_rondas.
@@ -272,10 +273,19 @@ accion_primer_mano(1, _) -->
 accion_primer_mano(2, NombreAccion) -->
     estado(S, S),
     {
-    format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
-    read(Res)
+        select(truco(1), S, _),
+   		format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
+    	read(Res)
     },
     accion_truco_decision(Res, NombreAccion). % es basicamente quiero o no quiero el truco.
+
+accion_primer_mano(2, NombreAccion) -->
+    estado(S,S),
+    {
+       	select(truco(2), S, _),
+   		format("El truco ya esta cantado jugador ~a!~n", [NombreAccion])
+    }.
+ 
     
 accion_primer_mano(3, _) --> [].
 
@@ -319,11 +329,18 @@ accion_truco_decision(Res,NombreAccion) -->
     }.  
     
 
-
+accion(1, NombreAccion) -->
+    estado(S, S),
+    {
+       	select(truco(2), S, _),
+   		format("El truco ya esta cantado jugador ~a!~n", [NombreAccion])
+    }.
 
 accion(1, NombreAccion) -->
-    estado(_, _),
-    {format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
+    estado(S, S),
+    {
+    select(truco(1), S, _),
+    format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
     read(Res)
     },
     accion_truco_decision(Res, NombreAccion).
