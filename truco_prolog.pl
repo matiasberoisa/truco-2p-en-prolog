@@ -122,7 +122,7 @@ cambiar_ronda -->
     estado(S0,S),
     {
     select(ronda(R, jugadores(Js)), S0, S1),
-    select(jugadores([_,_]), S1, S2),
+    select(jugadores([jugador(Nombre1, _, _),jugador(_, _, _)]), S1, S2),
     select(stock(_), S2, S3),
     select(envido(PuntosEnvido, GanadorEnvido), S3, S4),
     select(truco(PuntosTruco), S4, S5),
@@ -141,8 +141,14 @@ cambiar_ronda -->
    	format("puntaje: ~n"),
     format("~w: ~w.~n", [Ganador, PuntosGanador]),
     format("~w: ~w.~n", [Perdedor, PuntosPerdedor]),
-    S = [ronda(R1, jugadores([PerdedorActualizado, GanadorActualizado])),
-      jugadores([PerdedorActualizado, GanadorActualizado])| S5]
+    
+    (	Ganador = Nombre1 ->  
+    	S = [ronda(R1, jugadores([PerdedorActualizado, GanadorActualizado])),
+      	jugadores([PerdedorActualizado, GanadorActualizado])| S5]
+    ;   
+    	S = [ronda(R1, jugadores([GanadorActualizado, PerdedorActualizado])),
+      	jugadores([GanadorActualizado, PerdedorActualizado])| S5]
+    )
     }.
 
 jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores restantes
