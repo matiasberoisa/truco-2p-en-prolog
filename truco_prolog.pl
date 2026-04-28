@@ -49,11 +49,11 @@ valor_envido(1, 1).
 estado(S0, S, S0, S). % estado(EntradaVisible, SalidaVisible, EntradaDCG, SalidaDCG).
 
 truco -->
-    %{format("ingrese nombre del jugador 1:~n"),
-    %read(J1),
-    %format("ingrese nombre del jugador 2:~n"),
-    %read(J2)},
-    crearJugadores([j1,j2]),%[J1,J2]
+    {format("ingrese nombre del jugador 1:~n"),
+    read(J1),
+    format("ingrese nombre del jugador 2:~n"),
+    read(J2)},
+    crearJugadores([J1,J2]),
     jugar_rondas.
 
 crearJugadores(Nombres) -->
@@ -97,12 +97,13 @@ jugar_rondas -->
     repartir_una_carta,
     repartir_una_carta,
     estado(S1, S2),
-    {select(jugadores([jugador(_,_,PJ1), jugador(_,_,PJ2)]), S0, _), % Seleccione los jugadores macheando sus puntos de S0
+    {
+    select(jugadores([jugador(_,_,PJ1), jugador(_,_,PJ2)]), S0, _), % Seleccione los jugadores macheando sus puntos de S0
     % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
     % cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30),
-    jugar_primer_mano(S1,S2)},
-    %catch(jugar_primer_mano(S1,S2), irse_al_mazo, true)}, %para irse al mazo
+    catch(jugar_primer_mano(S1,S2), irse_al_mazo(S2), true) %para irse al mazo
+    },
     cambiar_ronda,
     jugar_rondas.
 
@@ -269,39 +270,13 @@ accion_primer_mano(1, _) -->
     }.
 
 accion_primer_mano(2, NombreAccion) -->
-    estado(S0, S),
-    cantar_truco,
-    {format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
+    estado(S, S),
+    {
+    format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
     read(Res)
     },
     accion_truco_decision(Res, NombreAccion). % es basicamente quiero o no quiero el truco.
     
-accion_truco_decision(Res, NombreAccion) -->
-    estado(S,S),
-    {
-    	Res = y,
-      	format("QUIERO~n")
-    }.
-
-accion_truco_decision(Res,NombreAccion) -->
-    estado(S0,S),
-    {
-    	Res = n
-    },
-    no_quiero_truco,
-    {
-        format("NO QUIERO~n"),
-        select(ronda(NumeroRonda, jugadores(Js)), S0, S1),
-        (
-            Js = [jugador(NombreAccion,_,_), jugador(NoQuiso,_,_)]
-        ;
-            Js = [jugador(NoQuiso,_,_), jugador(NombreAccion,_,_)]
-        ),
-        S = [ronda(NumeroRonda, jugadores([NombreAccion, NoQuiso]))|S1],
-        throw(irse_al_mazo)
-    }.  
-    
-
 accion_primer_mano(3, _) --> [].
 
 accion_primer_mano(4, NombreAccion) -->
@@ -316,11 +291,38 @@ accion_primer_mano(4, NombreAccion) -->
         Perdedor = jugador(J2,C2,PJ2)% caso 2: J2 se va al mazo
 		),
         S = [ronda(NumeroRonda, jugadores([Ganador, Perdedor]))|S1],
-    throw(irse_al_mazo)}.
+    throw(irse_al_mazo(S))}.
+
+accion_truco_decision(Res, _) -->
+    estado(S0,S),
+    {
+    	Res = y,
+      	format("QUIERO~n"),
+        select(truco(NivelTruco), S0, S1), % Saca el estado con el nivel de truco de S0 generando S1 sin ese estado
+        NuevoNivelTruco #= NivelTruco + 1, % Aumenta el nivel de truco
+        S = [truco(NuevoNivelTruco)|S1] % Actualiza el estado con el nuevo nivel de truco
+    }.
+
+accion_truco_decision(Res,NombreAccion) -->
+    estado(S0,S),
+    {
+    	Res = n,
+      	format("NO QUIERO~n"),
+        select(ronda(NumeroRonda, jugadores(Js)), S0, S1),
+        (
+            Js = [jugador(NombreAccion,_,_), jugador(_,_,_)]
+        ;
+            Js = [jugador(_,_,_), jugador(NombreAccion,_,_)]
+        ),
+        S = [ronda(NumeroRonda, jugadores(Js))|S1],
+        throw(irse_al_mazo(S))
+    }.  
+    
+
+
 
 accion(1, NombreAccion) -->
-    estado(S0, S),
-    cantar_truco,
+    estado(_, _),
     {format("El jugador ~a canta el truco!~n aceptar: Y rechazar: N", [NombreAccion]),
     read(Res)
     },
@@ -340,7 +342,7 @@ accion(3, NombreAccion) -->
         Perdedor = jugador(J2,C2,PJ2)% caso 2: J2 se va al mazo
 		),
         S = [ronda(NumeroRonda, jugadores([Ganador, Perdedor]))|S1],
-    throw(irse_al_mazo)}.
+    throw(irse_al_mazo(S))}.
 
 envido_querido --> 
     estado(S0, S),
@@ -370,22 +372,6 @@ envido_querido -->
     	Ganador = NombreCanto
 		),
         S = [envido(PuntosEnvido, Ganador)|S2] % Actualiza el estado con el nuevo puntaje del jugador que canto envido
-    }.
-    
-cantar_truco -->
-    estado(S0,S),
-    {
-        select(truco(NivelTruco), S0, S1), % Saca el estado con el nivel de truco de S0 generando S1 sin ese estado
-        NuevoNivelTruco #= NivelTruco + 1, % Aumenta el nivel de truco
-        S = [truco(NuevoNivelTruco)|S1] % Actualiza el estado con el nuevo nivel de truco
-    }.
-
-no_quiero_truco -->
-    estado(S0,S),
-    {
-        select(truco(NivelTruco), S0, S1), % Saca el estado con el nivel de truco de S0 generando S1 sin ese estado
-        NuevoNivelTruco #= NivelTruco - 1, % Disminuye el nivel de truco, indicando que se rechazo el truco
-        S = [truco(NuevoNivelTruco)|S1] % Actualiza el estado con el nivel de truco en 0, indicando que se acepto el truco
     }.
 
 tirar_carta(Jugador, CartaUsada, NuevoEstadoJugador) :-
@@ -473,4 +459,3 @@ repetirAccion(Respuesta) :-
 repetirAccion(Respuesta):-
     format("opcion invalida, ingrese nuevamente~n"),
     repetirAccion(Respuesta).
-
