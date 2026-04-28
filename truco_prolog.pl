@@ -154,7 +154,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
       	format("cartas restantes: ~w~n", [CartasEnManoP1]),
     	cargar_accion_primer_mano(NombreP1, S0, S2),
-        format("Que carta tira?~n"),
+        format("Que carta tira? escribir de forma: [NUMERO,PALO]~n"),
       	cargarCarta(CartasEnManoP1, C1), % Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
@@ -164,7 +164,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP2]),
 		format("cartas restantes: ~w~n", [CartasEnManoP2]),
         cargar_accion_primer_mano(NombreP2, S2, S3),
-        format("Que carta tira?~n"),
+        format("Que carta tira? escribir de forma: [NUMERO,PALO]~n"),
     	cargarCarta(CartasEnManoP2, C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
@@ -185,14 +185,14 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
 		format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP1]),
         format("cartas restantes: ~w~n", [CartasEnManoP1]),
       	cargar_accion(NombreP1, S, S1),
-        format("Que carta tira?~n"),
+        format("Que carta tira? escribir de forma: [NUMERO,PALO]~n"),
       	cargarCarta(CartasEnManoP1, C1),% Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP2]),
         format("cartas restantes: ~w~n", [CartasEnManoP2]),
         cargar_accion(NombreP2, S1, S2),
-        format("Que carta tira?~n"),
+        format("Que carta tira? escribir de forma: [NUMERO,PALO]~n"),
       	cargarCarta(CartasEnManoP2, C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
       	tirar_carta(P1, C1, P1Actualizado),
@@ -233,14 +233,14 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
     	format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP1]),
         format("cartas restantes: ~w~n", [CartasEnManoP1]),
       	cargar_accion(NombreP1, S1, S2),
-        format("Que carta tira?~n"),
+        format("Que carta tira? escribir de forma: [NUMERO,PALO]~n"),
       	cargarCarta(CartasEnManoP1, C1),% Se lee la opcion ingresada por el jugador, y se evalua con el DCG buscar_opciones
         format("el jugador ~a tira la carta: ~w~n", [NombreP1, C1]),
         % para determinar que accion se va a realizar dependiendo de la opcion ingresada
         format("es el turno de ~a! Elija una opcion: ~n 1. Cantar truco ~n 2. Jugar carta ~n 3. Irse al mazo~n", [NombreP2]),
         format("cartas restantes: ~w~n", [CartasEnManoP2]),
       	cargar_accion(NombreP2, S2, S3),
-        format("Que carta tira?~n"),
+        format("Que carta tira? escribir de forma: [NUMERO,PALO]~n"),
       	cargarCarta(CartasEnManoP2, C2),
         format("el jugador ~a tira la carta: ~w~n", [NombreP2, C2]),
         tirar_carta(P1, C1, P1Actualizado),
