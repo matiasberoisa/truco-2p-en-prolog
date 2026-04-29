@@ -84,7 +84,6 @@ repartir_una_carta --> % Se llamara 3 veces
     }.
 
 repartir_una_carta([], [], Cs, Cs).
-repartir_una_carta(Ps, Ps, [], []). %  ????
 repartir_una_carta([P|Ps], [P1|Ps1], [C|Cs], Cs1) :- % (jugadorAntes, JugadorDespues, CartasAntes, CartasDespues)
     P = jugador(N, A, B), % Afirma que P tiene forma de jugador, no es un igual sino una unificacion
     P1 = jugador(N, [C|A], B), % Crea un nuemo jugador con P1 asignandole el mismo nombre, solo le agrega la carta
