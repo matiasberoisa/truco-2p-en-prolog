@@ -71,6 +71,7 @@ mantener_activo :-
 
 % ----------------------------------------------------------------------------
 
+/*
 % esto mepa que se borra porque ya lo hace nuestra logica iniciar_rondas, pero lo dejo comentado por las dudas
 iniciar_rondas(Jugadores) :-
     forall(member(jugador(_, WS), Jugadores),
@@ -131,3 +132,4 @@ procesar_turnos([jugador(Nombre, WS)|Resto], Ronda) :-
 	   catch(ws_send(WSAll, text(MsgJugada)), _, true)),
 
     procesar_turnos(Resto, Ronda).
+*/

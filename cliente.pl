@@ -56,6 +56,7 @@ procesar_mensaje(Stream, Message) :-
     ).
 
 
+/*
 % Ya no sirve
 xprocesar_mensaje(Stream, Message) :-
     (   Message.data == "tu_turno" ->
@@ -82,3 +83,4 @@ manejar_turno(Stream) :-
     ws_send(Stream, prolog(Eleccion)),
     format("Jugada enviada: ~w~n", [Eleccion]),
     escuchar_mensajes(Stream).
+*/
