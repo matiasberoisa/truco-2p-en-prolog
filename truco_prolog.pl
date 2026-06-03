@@ -107,7 +107,7 @@ jugar_rondas -->
 jugar_rondas --> % Caso donde se termina el juego, es decir, cuando alguno de los jugadores llega a 30 puntos o mas
     %    estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
     estado(S),
-    {select(jugadores([jugador(N1,_,PJ1),jugador(N2,_,PJ2)]), S, _), % Seleccione los jugadores macheando sus puntos de S0
+    {select(jugadores([jugador(N1,_,PJ1, Ws1),jugador(N2,_,PJ2,Ws2)]), S, _), % Seleccione los jugadores macheando sus puntos de S0
     % Condicional para determinar el ganador, el jugador con mas puntos es el ganador, y se muestra su nombre y puntaje
     (PJ1 #> PJ2 ->
         format(atom(Msg), "El ganador es ~w con ~w puntos", [N1, PJ1])
