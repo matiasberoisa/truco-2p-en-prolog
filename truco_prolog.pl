@@ -46,9 +46,7 @@ valor_envido(3, 3).
 valor_envido(2, 2).
 valor_envido(1, 1).
 
-estado(S), [S] --> [S].
-estado(S0, S), [S] --> [S0].
- % estado(EntradaVisible, SalidaVisible, EntradaDCG, SalidaDCG).
+estado(S0, S, S0, S). % estado(EntradaVisible, SalidaVisible, EntradaDCG, SalidaDCG).
 
 truco(Jugadores) -->
     crearJugadores(Jugadores),
@@ -86,28 +84,26 @@ repartir_una_carta([P|Ps], [P1|Ps1], [C|Cs], Cs1) :- % (jugadorAntes, JugadorDes
     repartir_una_carta(Ps, Ps1, Cs, Cs1). % Luego llama para hacer lo mismo con el otro jugador
 
 jugar_rondas -->
-%    estado(S0, S), % no me importa el estado de salida, solo me interesa el estado de entrada S0 para obtener los puntos de los jugadores
+    estado(S0, S0), % no me importa el estado de salida, solo me interesa el estado de entrada S0 para obtener los puntos de los jugadores
     mezclar, % Aca llama a mezclar las cartas
     repartir_una_carta, % Aca reparte solo una vez las cartas, por eso se llama 3 veces
     repartir_una_carta,
     repartir_una_carta,
-    estado(S0,S),
-%    estado(S1, S2),
+    estado(S1, S2),
     {
-    select(jugadores([jugador(_,_,PJ1), jugador(_,_,PJ2)]), S0, _), % Seleccione los jugadores macheando sus puntos de S0
+    select(jugadores([jugador(_,_,PJ1, _), jugador(_,_,PJ2, _)]), S0, _), % Seleccione los jugadores macheando sus puntos de S0
     % y evalua el puntaje de ambos jugadores, si los puntajes son menores a 30, se sigue jugando, sino se termina el juego
     % cada jugador con su nombre, cartas en mano y puntos
     (PJ1 #< 30, PJ2 #< 30),
-    catch(jugar_primer_mano([S0],[S]), irse_al_mazo(S), true) %para irse al mazo
+    catch(jugar_primer_mano(S1,S2), irse_al_mazo(S2), true) %para irse al mazo
     % jugar_primer_mano(S1,S2)
     },
     cambiar_ronda,
     jugar_rondas.
 
 jugar_rondas --> % Caso donde se termina el juego, es decir, cuando alguno de los jugadores llega a 30 puntos o mas
-    %    estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
-    estado(S),
-    {select(jugadores([jugador(N1,_,PJ1, Ws1),jugador(N2,_,PJ2,Ws2)]), S, _), % Seleccione los jugadores macheando sus puntos de S0
+    estado(S, S), % No cambia el estado, solo lo lee, osea cuando veamos estado(S,S) es porque no se va a modificar el estado, solo se va a leer
+    {select(jugadores([jugador(N1,_,PJ1, Ws1),jugador(N2,_,PJ2, Ws2)]), S, _), % Seleccione los jugadores macheando sus puntos de S0
     % Condicional para determinar el ganador, el jugador con mas puntos es el ganador, y se muestra su nombre y puntaje
     (PJ1 #> PJ2 ->
         format(atom(Msg), "El ganador es ~w con ~w puntos", [N1, PJ1])
@@ -169,7 +165,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
       	format(atom(MsgCartasJ1), "cartas restantes: ~w", [CartasEnManoP1]),
         ws_send(Ws1, text(MsgCartasJ1)),
         ws_send(Ws1, text("elige_accion")),
-    	cargar_accion_primer_mano(NombreP1, Ws1, [S0], [S2]),
+    	cargar_accion_primer_mano(NombreP1, Ws1, S0, S2),
 
         ws_send(Ws1, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
 
@@ -187,7 +183,7 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
         ws_send(Ws2, text(MsgTurnoJ2)),
         ws_send(Ws2, text(MsgCartasJ2)),
         ws_send(Ws2, text("elige_accion")),
-        cargar_accion_primer_mano(NombreP2, Ws2, [S2], [S3]),
+        cargar_accion_primer_mano(NombreP2, Ws2, S2, S3),
 
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
     	
@@ -221,7 +217,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
 
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),    
         
-      	cargar_accion(NombreP1, Ws1, [S], [S1]),
+      	cargar_accion(NombreP1, Ws1, S, S1),
         
         ws_send(Ws1, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
 
@@ -238,7 +234,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws2, text(MsgCartasJ2)),
         ws_send(Ws2, text("elige_accion")),
 
-        cargar_accion(NombreP2, Ws2, [S1], [S2]),
+        cargar_accion(NombreP2, Ws2, S1, S2),
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
 
       	cargarCarta_ws(CartasEnManoP2, C2, Ws2),
@@ -295,7 +291,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),
 
       	
-        cargar_accion(NombreP1, Ws1, [S1], [S2]),
+        cargar_accion(NombreP1, Ws1, S1, S2),
 
         ws_send(Ws1, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
 
@@ -313,7 +309,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws2, text(MsgCartasJ2)),
         ws_send(Ws2, text("elige_accion")),
 
-      	cargar_accion(NombreP2, Ws2, [S2], [S3]),
+      	cargar_accion(NombreP2, Ws2, S2, S3),
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
       	cargarCarta_ws(CartasEnManoP2, C2, Ws2),
         
@@ -341,7 +337,7 @@ accion_primer_mano(1, NombreAccion) -->
     envido_querido.
 
 accion_primer_mano(1, _) -->
-    estado(S),
+    estado(S0, S),
     {
         select(envido(PuntosEnvido, _), S0, _), % Saca el estado con el envido de S0 generando S1 sin ese estado
         PuntosEnvido #> 0, % Verifica que el envido ya haya sido cantado, para poder cantar un nuevo envido
@@ -352,7 +348,7 @@ accion_primer_mano(1, _) -->
     }.
 
 accion_primer_mano(2, NombreAccion) -->
-    estado(S),
+    estado(S, S),
     {
         select(truco(1), S, _),
         % Antes
@@ -437,7 +433,7 @@ accion_truco_decision(Res,NombreAccion) -->
     
 
 accion(1, NombreAccion) -->
-    estado(S),
+    estado(S, S),
     {
        	select(truco(2), S, _),
    		select(ronda(_, jugadores([jugador(_,_,_,Ws1), jugador(_,_,_,Ws2)])), S, _),
@@ -447,7 +443,7 @@ accion(1, NombreAccion) -->
     }.
 
 accion(1, NombreAccion) -->
-    estado(S),
+    estado(S, S),
     {
     select(truco(1), S, _),
     % Antes
