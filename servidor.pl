@@ -1,10 +1,14 @@
 :- module(servidorjuego, [main/0]).
 
+
 :- use_module(library(http/websocket)).
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_files)).
+:- use_module(library(http/http_cors)).
 :- use_module(library(lists), [member/2]).
+
+:- set_setting(http:cors, [*]).
 
 :- consult('truco_prolog.pl').
 
