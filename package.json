@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "swipl-wasm": "^7.0.10"
+  }
+}

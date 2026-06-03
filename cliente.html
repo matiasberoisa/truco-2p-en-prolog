@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Truco</title>
+    <!-- Carga SWI-Prolog WASM desde CDN oficial -->
+    <script src="/swipl-bundle.js"></script>
+</head>
+<body>
+    <h2>Truco - Cliente Web</h2>
+
+    <div>
+        <label>Tu nombre:</label>
+        <input id="nombre" type="text" />
+        <button onclick="conectar()">Conectar</button>
+    </div>
+
+    <div id="mensajes" style="
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid black;
+        padding: 10px;
+        font-family: monospace;
+        white-space: pre-wrap;
+    "></div>
+
+    <div id="input-area" style="display:none">
+        <input id="respuesta" type="text" placeholder="Tu respuesta..." />
+        <button onclick="enviarRespuesta()">Enviar</button>
+    </div>
+
+    <script>
+    let ws;
+    let Prolog;
+    let esperandoInput = false;
+
+    // Inicializar Prolog WASM
+    (async () => {
+    const swipl = await SWIPL({ arguments: ["-q"] });
+    Prolog = swipl.prolog;
+    mostrar("Prolog WASM listo.");
+    mostrar("Sistema listo. Ingresá tu nombre y conectate.");
+    })();
+
+    function conectar() {
+        const nombre = document.getElementById("nombre").value;
+        if (!nombre) { alert("Ingresá un nombre"); return; }
+
+        ws = new WebSocket("ws://localhost:8316/ws");
+
+        ws.onopen = () => {
+            mostrar("Conectado al servidor.");
+            // Mandar join como término Prolog
+            ws.send("join(" + nombre + ").");
+        };
+
+        ws.onmessage = (event) => {
+            const msg = event.data;
+            manejarMensaje(msg);
+        };
+
+        ws.onclose = () => mostrar("Conexión cerrada.");
+        ws.onerror = (e) => mostrar("Error: " + e);
+    }
+
+    function manejarMensaje(msg) {
+        mostrar("Servidor: " + msg);
+
+        // Preguntarle a Prolog qué tipo de respuesta necesita este mensaje
+        const query = Prolog.query(
+            `procesar_mensaje("${msg.replace(/"/g, '\\"')}", Tipo)`
+        );
+        const result = query.once();
+        query.close();
+
+        const tipo = result ? result.Tipo : "solo_mostrar";
+
+        if (tipo === "necesita_accion") {
+            mostrarInput("Tu elección (1-4):");
+        } else if (tipo === "necesita_carta") {
+            mostrarInput("Tu carta (ej: [1,espada]):");
+        } else if (tipo === "necesita_respuesta") {
+            mostrarInput("Aceptar/rechazar (y/n):");
+        }
+        // si es solo_mostrar, no hace nada más
+    }
+
+    function mostrarInput(placeholder) {
+        esperandoInput = true;
+        document.getElementById("respuesta").placeholder = placeholder;
+        document.getElementById("input-area").style.display = "block";
+        document.getElementById("respuesta").focus();
+    }
+
+    function enviarRespuesta() {
+        if (!esperandoInput) return;
+        const respuesta = document.getElementById("respuesta").value;
+        if (!respuesta) return;
+
+        mostrar("Vos: " + respuesta);
+        // Mandar como término Prolog (con punto al final)
+        ws.send(respuesta + ".");
+        document.getElementById("respuesta").value = "";
+        document.getElementById("input-area").style.display = "none";
+        esperandoInput = false;
+    }
+
+    // Permitir Enter para enviar
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && esperandoInput) enviarRespuesta();
+    });
+
+    function mostrar(texto) {
+        const div = document.getElementById("mensajes");
+        div.innerHTML += texto + "\n";
+        div.scrollTop = div.scrollHeight;
+    }
+    </script>
+</body>
+</html>

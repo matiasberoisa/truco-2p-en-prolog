@@ -471,17 +471,21 @@ accion(2, _) --> [].
 
 accion(3, NombreAccion) -->
     estado(S0, S),
-    {format("~a se va al mazo~n", [NombreAccion]),
-    	select(ronda(NumeroRonda, jugadores([jugador(J1,C1,PJ1,_), jugador(J2,C2,PJ2,_)])), S0, S1),
+    {
+        select(ronda(NumeroRonda, jugadores([jugador(J1,C1,PJ1,Ws1), jugador(J2,C2,PJ2,Ws2)])), S0, S1),
+        format(atom(MsgMazo), "~a se va al mazo!", [NombreAccion]),
+        ws_send(Ws1, text(MsgMazo)),
+        ws_send(Ws2, text(MsgMazo)),
         ( NombreAccion = J1 ->
-        Perdedor = jugador(J1,C1,PJ1, _),
-        Ganador = jugador(J2,C2,PJ2, _)% caso 1: J1 se va al mazo
-		;
-    	Ganador = jugador(J1,C1,PJ1, _),
-        Perdedor = jugador(J2,C2,PJ2, _)% caso 2: J2 se va al mazo
-		),
+            Perdedor = jugador(J1,C1,PJ1,Ws1),
+            Ganador  = jugador(J2,C2,PJ2,Ws2) % caso 1: J1 se va al mazo
+        ;
+            Ganador  = jugador(J1,C1,PJ1,Ws1),
+            Perdedor = jugador(J2,C2,PJ2,Ws2)
+        ),
         S = [ronda(NumeroRonda, jugadores([Ganador, Perdedor]))|S1],
-    throw(irse_al_mazo(S))}.
+        throw(irse_al_mazo(S))
+    }.
 
 envido_querido --> 
     estado(S0, S),

@@ -3,12 +3,19 @@
 :- use_module(library(http/websocket)).
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
+:- use_module(library(http/http_files)).
 :- use_module(library(lists), [member/2]).
 
-:- consult('truco_prolog.pl'). % Importa reglas y lógica del juego desde truco_prolog.pl
+:- consult('truco_prolog.pl').
 
 :- dynamic(jugadores/1).
 :- dynamic(juego/1).
+
+% Handlers - websocket primero, después archivos
+:- http_handler(root(ws), http_upgrade_to_websocket(procesar_jugador, []), [spawn([])]).
+:- http_handler(root('swipl-bundle.js'), 
+    http_reply_file('swipl-bundle.js', [mime_type(application/javascript)]), []).
+:- http_handler(root(.), http_reply_from_files('.', []), [prefix]).
 
 main :-
     http_server(http_dispatch, [port(8316)]),
@@ -24,7 +31,6 @@ esperar_fin_juego :-
         esperar_fin_juego
     ).
 
-:- http_handler(root(ws), http_upgrade_to_websocket(procesar_jugador, []), [spawn([])]).
 
 procesar_jugador(WebSocket) :-
     ws_receive(WebSocket, Message, [format(prolog)]),
