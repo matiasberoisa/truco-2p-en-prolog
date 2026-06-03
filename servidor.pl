@@ -59,13 +59,22 @@ agregar_jugador(Nombre, WebSocket) :-
 
 verificar_inicio :-
     jugadores(Lista),
-    length(Lista, 2), % Solo 2 jugadores para prueba
+    length(Lista, 2),
     !,
     assertz(juego(iniciado)),
     format("Iniciando juego con ~w jugadores~n", [2]),
-    %iniciar_rondas(Lista).
-    reverse(Lista, [J1, J2]),    % orden de conexión
-    phrase(truco([J1, J2]), []).     % arranca el truco.
+    reverse(Lista, [J1, J2]),
+    % Lanzar el juego en un hilo separado para no bloquear
+    % los hilos de conexión de J1 y J2
+    thread_create(
+        catch(
+            phrase(truco([J1, J2]), []),
+            Error,
+            format("Error en juego: ~w~n", [Error])
+        ),
+        _,
+        [detached(true)]
+    ).
 
 verificar_inicio :-
     jugadores(Lista),
@@ -76,6 +85,7 @@ mantener_activo :-
     (   juego(terminado) ->
         format("Hilo terminando para websocket~n", [])
     ;   
+    sleep(0.1),
 	mantener_activo
     ).
 

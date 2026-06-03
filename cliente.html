@@ -63,26 +63,16 @@
     }
 
     function manejarMensaje(msg) {
-        mostrar("Servidor: " + msg);
+    mostrar("Servidor: " + msg);
 
-        // Preguntarle a Prolog qué tipo de respuesta necesita este mensaje
-        const query = Prolog.query(
-            `procesar_mensaje("${msg.replace(/"/g, '\\"')}", Tipo)`
-        );
-        const result = query.once();
-        query.close();
-
-        const tipo = result ? result.Tipo : "solo_mostrar";
-
-        if (tipo === "necesita_accion") {
-            mostrarInput("Tu elección (1-4):");
-        } else if (tipo === "necesita_carta") {
-            mostrarInput("Tu carta (ej: [1,espada]):");
-        } else if (tipo === "necesita_respuesta") {
-            mostrarInput("Aceptar/rechazar (y/n):");
-        }
-        // si es solo_mostrar, no hace nada más
+    if (msg.includes("elige_accion")) {
+        mostrarInput("Tu elección (1-4):");
+    } else if (msg.includes("Que carta tira")) {
+        mostrarInput("Tu carta (ej: [1,espada]):");
+    } else if (msg.includes("aceptar: y")) {
+        mostrarInput("Aceptar/rechazar (y/n):");
     }
+}
 
     function mostrarInput(placeholder) {
         esperandoInput = true;
