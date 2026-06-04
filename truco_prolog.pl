@@ -1,10 +1,6 @@
 :- use_module(library(clpfd)). % Libreria
 :- use_module(library(random)). % Libreria 
 
-palos([oro, espada, basto, copa]). 
-
-numeros([rey, caballo, sota, 7, 6, 5, 4, 3, 2, 1]).
-
 crearJugador(Nombre, jugador(Nombre, [], 0, WebSocket), WebSocket).
 
 stock([[rey, oro], [rey, espada], [rey, basto], [rey, copa],
@@ -213,7 +209,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text(MsgTurnoJ1)),
         format(atom(MsgCartasJ1), "cartas restantes: ~w", [CartasEnManoP1]),
         ws_send(Ws1, text(MsgCartasJ1)),
-        ws_send(Ws1, text("elige_accion")),
+        ws_send(Ws1, text("elige_accion_sin_envido")),
 
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),    
         
@@ -232,7 +228,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text("Esta jugando sus cartas el jugador contrario...")), % ← a Ws1, no Ws2
         ws_send(Ws2, text(MsgTurnoJ2)),
         ws_send(Ws2, text(MsgCartasJ2)),
-        ws_send(Ws2, text("elige_accion")),
+        ws_send(Ws1, text("elige_accion_sin_envido")),
 
         cargar_accion(NombreP2, Ws2, S1, S2),
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
@@ -286,7 +282,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text(MsgTurnoP1)),
         format(atom(MsgCartasJ1), "cartas restantes: ~w", [CartasEnManoP1]),
         ws_send(Ws1, text(MsgCartasJ1)),
-        ws_send(Ws1, text("elige_accion")),
+        ws_send(Ws1, text("elige_accion_sin_envido")),
 
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),
 
@@ -307,7 +303,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text("Esta jugando sus cartas el jugador contrario...")), % ← a Ws1, no Ws2
         ws_send(Ws2, text(MsgTurnoJ2)),
         ws_send(Ws2, text(MsgCartasJ2)),
-        ws_send(Ws2, text("elige_accion")),
+        ws_send(Ws1, text("elige_accion_sin_envido")),
 
       	cargar_accion(NombreP2, Ws2, S2, S3),
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),

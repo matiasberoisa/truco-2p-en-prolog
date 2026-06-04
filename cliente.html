@@ -1,9 +1,28 @@
 <!DOCTYPE html>
 <html>
-<head>
+<head >
     <title>Truco</title>
-    <!-- Carga SWI-Prolog WASM desde CDN oficial -->
     <script src="/swipl-bundle.js"></script>
+    <style>
+        .carta {
+            width: 93px;
+            height: 142px;
+            background-image: url('barajaNueva.png');
+            background-repeat: no-repeat;
+            display: inline-block;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+        }
+        .carta:hover        { transform: translateY(-10px); box-shadow: 4px 8px 16px rgba(0,0,0,0.6); }
+        .carta.seleccionada { transform: translateY(-16px); box-shadow: 0 0 0 3px #f5c518, 4px 8px 16px rgba(0,0,0,0.6); }
+        .carta.deshabilitada { opacity: 0.4; cursor: default; pointer-events: none; }
+        #cartas_area { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+        #input-area  { display: none; margin-top: 10px; gap: 8px; flex-wrap: wrap; }
+        #input-area button {font-size: 14px; cursor: pointer; width: 10rem;background-color: rgb(2, 133, 65); color: white;border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: bold;}
+        body {background-color: rgb(2, 133, 65)};
+    </style>
 </head>
 <body>
     <h2>Truco - Cliente Web</h2>
@@ -23,81 +42,159 @@
         white-space: pre-wrap;
     "></div>
 
-    <div id="input-area" style="display:none">
-        <input id="respuesta" type="text" placeholder="Tu respuesta..." />
-        <button onclick="enviarRespuesta()">Enviar</button>
-    </div>
+    <div id="cartas_area"></div>
+
+    <!-- input-area: se rellena dinámicamente con botones -->
+    <div id="input-area"></div>
 
     <script>
     let ws;
     let Prolog;
     let esperandoInput = false;
+    let esperandoCarta = false;
 
-    // Inicializar Prolog WASM
+    const ANCHO = 93;
+    const ALTO  = 142;
+    const FILAS    = { oro: 0, copa: 1, espada: 2, basto: 3 };
+    const COLUMNAS = { 1:0, 2:1, 3:2, 4:3, 5:4, 6:5, 7:6,
+                       sota:7, caballo:8, rey:9,
+                       10:7, 11:8, 12:9 };
+
     (async () => {
-    const swipl = await SWIPL({ arguments: ["-q"] });
-    Prolog = swipl.prolog;
-    mostrar("Prolog WASM listo.");
-    mostrar("Sistema listo. Ingresá tu nombre y conectate.");
+        const swipl = await SWIPL({ arguments: ["-q"] });
+        Prolog = swipl.prolog;
+        mostrar("Prolog WASM listo.");
+        mostrar("Sistema listo. Ingresá tu nombre y conectate.");
     })();
 
+    // --- Cartas ---
+    function generarCarta(numero, palo) {
+        const col  = COLUMNAS[numero];
+        const fila = FILAS[palo];
+        if (col === undefined || fila === undefined) return null;
+
+        const div = document.createElement('div');
+        div.className = 'carta deshabilitada';
+        div.style.backgroundPosition = `-${col * ANCHO}px -${fila * ALTO}px`;
+        div.title = `${numero} de ${palo}`;
+        div.dataset.numero = numero;
+        div.dataset.palo   = palo;
+        div.addEventListener('click', () => {
+            if (!esperandoCarta) return;
+            tirarCarta(numero, palo);
+        });
+        return div;
+    }
+
+    function mostrarCartas(cartas) {
+        const area = document.getElementById('cartas_area');
+        area.innerHTML = '';
+        cartas.forEach(([numero, palo]) => {
+            const carta = generarCarta(numero, palo);
+            if (carta) area.appendChild(carta);
+        });
+    }
+
+    function habilitarCartas(habilitar) {
+        esperandoCarta = habilitar;
+        document.querySelectorAll('.carta').forEach(c => {
+            c.classList.toggle('deshabilitada', !habilitar);
+        });
+    }
+
+    function tirarCarta(numero, palo) {
+        esperandoCarta = false;
+        esperandoInput = false;
+        habilitarCartas(false);
+        const termino = `[${numero},${palo}]`;
+        mostrar("Vos: " + termino);
+        ws.send(termino + ".");
+        document.querySelectorAll('.carta').forEach(c => {
+            if (String(c.dataset.numero) === String(numero) && c.dataset.palo === palo)
+                c.remove();
+        });
+        ocultarInputArea();
+    }
+
+    // --- WebSocket ---
     function conectar() {
         const nombre = document.getElementById("nombre").value;
         if (!nombre) { alert("Ingresá un nombre"); return; }
-
         ws = new WebSocket("ws://localhost:8316/ws");
-
-        ws.onopen = () => {
-            mostrar("Conectado al servidor.");
-            // Mandar join como término Prolog
-            ws.send("join(" + nombre + ").");
-        };
-
-        ws.onmessage = (event) => {
-            const msg = event.data;
-            manejarMensaje(msg);
-        };
-
-        ws.onclose = () => mostrar("Conexión cerrada.");
-        ws.onerror = (e) => mostrar("Error: " + e);
+        ws.onopen    = () => { mostrar("Conectado al servidor."); ws.send("join(" + nombre + ")."); };
+        ws.onmessage = (event) => manejarMensaje(event.data);
+        ws.onclose   = () => mostrar("Conexión cerrada.");
+        ws.onerror   = (e) => mostrar("Error: " + e);
     }
 
     function manejarMensaje(msg) {
-    mostrar("Servidor: " + msg);
+        mostrar("Servidor: " + msg);
 
-    if (msg.includes("elige_accion")) {
-        mostrarInput("Tu elección (1-4):");
-    } else if (msg.includes("Que carta tira")) {
-        mostrarInput("Tu carta (ej: [1,espada]):");
-    } else if (msg.includes("aceptar: y")) {
-        mostrarInput("Aceptar/rechazar (y/n):");
+        if (msg.includes("cartas restantes:")) {
+            const match = msg.match(/\[\[.*?\]\]/);
+            if (match) {
+                const cartas = [...match[0].matchAll(/\[(\w+),(\w+)\]/g)]
+                    .map(([, num, palo]) => [isNaN(num) ? num : Number(num), palo]);
+                mostrarCartas(cartas);
+            }
+        }
+
+        if (msg.includes("elige_accion_sin_envido")) {
+            mostrarBotones([
+                { valor: 1, texto: "Cantar truco" },
+                { valor: 2, texto: "Tirar carta"  },
+                { valor: 3, texto: "Irse al mazo" }
+            ]);
+        } else if (msg.includes("elige_accion")) {
+            mostrarBotones([
+                { valor: 1, texto: "Cantar envido" },
+                { valor: 2, texto: "Cantar truco"  },
+                { valor: 3, texto: "Tirar carta"   },
+                { valor: 4, texto: "Irse al mazo"  }
+            ]);
+        }
+
+        if (msg.includes("Que carta tira")) {
+            habilitarCartas(true);
+            mostrar(">>> Hacé click en la carta que querés tirar");
+            ocultarInputArea();
+        }
+
+        if (msg.includes("aceptar: y")) {
+            mostrarBotones([
+                { valor: 'y', texto: "✔ QUIERO"    },
+                { valor: 'n', texto: "✘ NO QUIERO" }
+            ]);
+        }
     }
-}
 
-    function mostrarInput(placeholder) {
+    // --- Input area dinámica ---
+    function mostrarBotones(opciones) {
         esperandoInput = true;
-        document.getElementById("respuesta").placeholder = placeholder;
-        document.getElementById("input-area").style.display = "block";
-        document.getElementById("respuesta").focus();
+        const area = document.getElementById("input-area");
+        area.innerHTML = '';  // limpiar botones anteriores
+        opciones.forEach(({ valor, texto }) => {
+            const btn = document.createElement('button');
+            btn.textContent = texto;
+            btn.onclick = () => enviarRespuesta(valor);
+            area.appendChild(btn);
+        });
+        area.style.display = 'flex';
     }
 
-    function enviarRespuesta() {
-        if (!esperandoInput) return;
-        const respuesta = document.getElementById("respuesta").value;
-        if (!respuesta) return;
-
-        mostrar("Vos: " + respuesta);
-        // Mandar como término Prolog (con punto al final)
-        ws.send(respuesta + ".");
-        document.getElementById("respuesta").value = "";
-        document.getElementById("input-area").style.display = "none";
+    function ocultarInputArea() {
+        const area = document.getElementById("input-area");
+        area.innerHTML = '';
+        area.style.display = 'none';
         esperandoInput = false;
     }
 
-    // Permitir Enter para enviar
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "Enter" && esperandoInput) enviarRespuesta();
-    });
+    function enviarRespuesta(valor) {
+        if (!esperandoInput) return;
+        mostrar("Vos: " + valor);
+        ws.send(valor + ".");
+        ocultarInputArea();
+    }
 
     function mostrar(texto) {
         const div = document.getElementById("mensajes");
