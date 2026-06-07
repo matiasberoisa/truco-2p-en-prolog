@@ -28,9 +28,16 @@ procesar_mensaje(Stream, Message) :-
         format("~w~n", [Message.data]),
         escuchar_mensajes(Stream)  % espera el mensaje de cartas que viene despues
     
-    % El servidor manda las cartas disponibles - aca el jugador elige
+    % El servidor manda las cartas disponibles - aca el jugador elige para la primer mano
     ;   Message.data == "elige_accion" ->
         format("Tu eleccion (numero entre 1 y 4): ~n"),
+        read(Eleccion),
+        ws_send(Stream, prolog(Eleccion)),
+        escuchar_mensajes(Stream)
+
+    % El servidor manda las cartas disponibles - aca el jugador elige
+    ;   Message.data == "elige_accion_sin_envido" ->
+        format("Tu eleccion (numero entre 1 y 3): ~n"),
         read(Eleccion),
         ws_send(Stream, prolog(Eleccion)),
         escuchar_mensajes(Stream)

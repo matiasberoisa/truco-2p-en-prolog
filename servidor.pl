@@ -14,6 +14,7 @@
 
 :- dynamic(jugadores/1).
 :- dynamic(juego/1).
+:- dynamic(ui_socket/1).
 
 % Handlers - websocket primero, después archivos
 :- http_handler(root(ws), http_upgrade_to_websocket(procesar_jugador, []), [spawn([])]).
