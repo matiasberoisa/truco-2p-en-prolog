@@ -121,7 +121,8 @@ cambiar_ronda -->
     Js = [jugador(Ganador, _, PG, WsG), jugador(Perdedor, _, PP, WsP)],
     R1 #= R + 1,
     
-    (GanadorEnvido = Ganador ->
+    %(GanadorEnvido = Ganador ->
+    (nonvar(GanadorEnvido), GanadorEnvido = Ganador ->
     PuntosGanador #= PG + PuntosTruco + PuntosEnvido,
     	PuntosPerdedor #= PP
 	;
@@ -152,8 +153,14 @@ jugar_primer_mano --> % P es el jugador actual, Ps es la lista de jugadores rest
       	% Aca se establece un turno y aparecen las opciones disponibles para el jugador, se muestra su nombre y las cartas que tiene en mano
     	%format("//////////RONDA N° ~w//////////~n", [NumeroRonda]),
         format(atom(MsgRonda), "//////////RONDA N° ~w//////////~n", [NumeroRonda]),
+        % mandamos a mostrar las cartas en el html
         ws_send(Ws1, text(MsgRonda)),
         ws_send(Ws2, text(MsgRonda)),
+       
+        %%%%%%%
+        format(atom(MsgCartasJ2Inicial), "cartas restantes: ~w", [CartasEnManoP2]),
+        ws_send(Ws2, text(MsgCartasJ2Inicial)),
+        
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),
 
         format(atom(MsgTurnoJ1), "Es su turno ~a! Elija una opcion: ~n 1. Cantar envido ~n 2. Cantar truco ~n 3. Jugar carta ~n 4. Irse al mazo~n", [NombreP1]),
@@ -211,8 +218,12 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text(MsgCartasJ1)),
         ws_send(Ws1, text("elige_accion_sin_envido")),
 
+        %%%%%%%
+        format(atom(MsgCartasJ2Inicial), "cartas restantes: ~w", [CartasEnManoP2]),
+        ws_send(Ws2, text(MsgCartasJ2Inicial)),
+
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),    
-        
+
       	cargar_accion(NombreP1, Ws1, S, S1),
         
         ws_send(Ws1, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
@@ -228,7 +239,7 @@ jugar_segunda_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text("Esta jugando sus cartas el jugador contrario...")), % ← a Ws1, no Ws2
         ws_send(Ws2, text(MsgTurnoJ2)),
         ws_send(Ws2, text(MsgCartasJ2)),
-        ws_send(Ws1, text("elige_accion_sin_envido")),
+        ws_send(Ws2, text("elige_accion_sin_envido")),
 
         cargar_accion(NombreP2, Ws2, S1, S2),
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),
@@ -284,6 +295,10 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text(MsgCartasJ1)),
         ws_send(Ws1, text("elige_accion_sin_envido")),
 
+        %%%%%
+        format(atom(MsgCartasJ2Inicial), "cartas restantes: ~w", [CartasEnManoP2]),
+        ws_send(Ws2, text(MsgCartasJ2Inicial)),
+
         ws_send(Ws2, text("Esta jugando sus cartas el jugador contrario...")),
 
       	
@@ -303,7 +318,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         ws_send(Ws1, text("Esta jugando sus cartas el jugador contrario...")), % ← a Ws1, no Ws2
         ws_send(Ws2, text(MsgTurnoJ2)),
         ws_send(Ws2, text(MsgCartasJ2)),
-        ws_send(Ws1, text("elige_accion_sin_envido")),
+        ws_send(Ws2, text("elige_accion_sin_envido")),
 
       	cargar_accion(NombreP2, Ws2, S2, S3),
         ws_send(Ws2, text("Que carta tira? escribir de forma: [NUMERO,PALO]~n")),

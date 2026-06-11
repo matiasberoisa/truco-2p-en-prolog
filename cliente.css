@@ -1,107 +1,358 @@
+/* ========================================================
+   Truco — estilos principales
+   Mesa: paño verde oscuro, acentos dorados
+   ======================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500&display=swap');
+
+:root {
+    --mesa:        #1a5c35;
+    --mesa-dark:   #0f3d23;
+    --mesa-borde:  rgba(255,255,255,0.07);
+    --oro:         #c9933a;
+    --oro-claro:   #f0c060;
+    --texto:       #e8dfc8;
+    --texto-muted: rgba(232,223,200,0.45);
+    --r-sm: 7px;
+    --r-md: 10px;
+    --r-lg: 12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-    background-color: rgb(2, 133, 65);
-    font-family: "Segoe UI", sans-serif;
-    color: white;
-
-    input,
-    textarea {
-        border: solid 1px #ccc;
-        border-radius: 8px;
-        padding: 0.5rem;
-        background: none;
-        outline: none;
-        margin-bottom: 0.5rem;
-        color: white;
-    }
+    background: var(--mesa-dark);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    color: var(--texto);
+    min-height: 100vh;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-#mensajes {
-    height: 300px;
-    overflow-y: hidden;
-    border: solid 1px #ccc;
-    border-radius: 8px;
-    padding: 10px;
-    white-space: pre-wrap;
+/* ── Header ─────────────────────────────────────────────── */
+.tp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(201,147,58,0.3);
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
-#input-area {
-    display: none;
-    margin-top: 10px;
+.tp-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--oro-claro);
+    letter-spacing: 1px;
+}
+
+.tp-header-right { display: flex; align-items: center; }
+
+/* ── Puntajes ────────────────────────────────────────────── */
+.puntos-bar {
+    display: flex;
     gap: 8px;
+}
+
+.punto-card {
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--r-md);
+    border: 1px solid var(--mesa-borde);
+    padding: 6px 18px;
+    text-align: center;
+    min-width: 70px;
+}
+.punto-card .label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--texto-muted);
+    margin-bottom: 2px;
+}
+.punto-card .valor {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 26px;
+    color: var(--oro-claro);
+    line-height: 1;
+}
+
+/* ── Fila conexión ───────────────────────────────────────── */
+.tp-connect {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(0,0,0,0.25);
+    border-radius: var(--r-md);
+    padding: 10px 14px;
+    border: 1px solid var(--mesa-borde);
     flex-wrap: wrap;
 }
 
-#input-area.visible {
-    display: flex;
+.tp-connect label {
+    font-size: 13px;
+    color: var(--texto-muted);
+    white-space: nowrap;
 }
 
+.tp-connect input,
+input, textarea {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: var(--r-sm);
+    padding: 8px 12px;
+    color: var(--texto);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.tp-connect input { flex: 1; min-width: 140px; }
+input::placeholder, textarea::placeholder { color: rgba(232,223,200,0.35); }
+input:focus, textarea:focus { border-color: rgba(201,147,58,0.55); }
+
+/* Botón conectar */
+#boton {
+    background: var(--oro);
+    color: #1a1a0e;
+    border: none;
+    border-radius: var(--r-sm);
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+}
+#boton:hover  { background: var(--oro-claro); }
+#boton:active { transform: scale(0.97); }
+
+/* ── Layout principal ────────────────────────────────────── */
+.tp-main {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 12px;
+    flex: 1;
+}
+
+/* ── Mesa de juego ───────────────────────────────────────── */
+.tp-mesa {
+    background: var(--mesa);
+    border-radius: var(--r-lg);
+    border: 1px solid var(--mesa-borde);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px;
+    min-height: 340px;
+}
+
+.mesa-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--texto-muted);
+}
+
+.oponente-cartas,
+.cartas-jugador {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    min-height: 52px;
+}
+
+/* El ID original del HTML */
 #cartas_area {
     display: flex;
     gap: 8px;
-    margin-top: 10px;
+    justify-content: center;
     flex-wrap: wrap;
+    min-height: 52px;
 }
 
+.mesa-central {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.2);
+    padding: 12px;
+    min-height: 80px;
+}
+
+.mesa-hint {
+    font-size: 12px;
+    color: var(--texto-muted);
+    font-style: italic;
+}
+
+/* ── Cartas (sprite) ─────────────────────────────────────── */
 .carta {
     width: 93px;
     height: 142px;
     background-image: url('barajaNueva.png');
     background-repeat: no-repeat;
-    display: inline-block;
     border-radius: 8px;
     cursor: pointer;
     transition: transform 0.15s, box-shadow 0.15s;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.5);
+    display: inline-block;
 }
-.carta:hover{
-    transform: translateY(-10px);
-    box-shadow: 4px 8px 16px rgba(0,0,0,0.6);
+.carta:hover {
+    transform: translateY(-12px);
+    box-shadow: 3px 10px 20px rgba(0,0,0,0.6);
 }
 .carta.seleccionada {
-    transform: translateY(-16px); 
-    box-shadow: 0 0 0 3px #f5c518, 4px 8px 16px rgba(0,0,0,0.6); 
+    transform: translateY(-18px);
+    box-shadow: 0 0 0 3px var(--oro), 3px 10px 20px rgba(0,0,0,0.6);
 }
 .carta.deshabilitada {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: default;
     pointer-events: none;
 }
-#cartas_area {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-    flex-wrap: wrap;
-}
-#input-area  {
-    display: none;
-    margin-top: 10px;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-#input-area button {
-    font-size: 14px;
-    cursor: pointer;
-    width: 10rem;
-    background-color: rgb(2, 133, 65);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
+
+/* Reverso del oponente */
+.carta-reverso {
+    width: 72px;
+    height: 110px;
     border-radius: 8px;
-    font-weight: bold;
+    background: repeating-linear-gradient(
+        45deg,
+        #1c3a6e 0px, #1c3a6e 4px,
+        #152e58 4px, #152e58 8px
+    );
+    border: 2px solid #2a5aa0;
+    box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
 }
 
-#boton {
-        background-color: white;
-        color: rgb(2, 133, 65);
-        border: none;
-        padding: 0.5rem;
-        border-radius: 8px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: 0.3s;
-        font-family: "Segoe UI", sans-serif;
-    }
+/* ── Sidebar ─────────────────────────────────────────────── */
+.tp-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-#boton:hover {
-    transform: scale(1.05);
+/* Badge de turno */
+.turno-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(33,122,71,0.35);
+    border: 1px solid rgba(33,122,71,0.55);
+    border-radius: var(--r-sm);
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #90d4a8;
+}
+.turno-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #50c878;
+    flex-shrink: 0;
+    animation: pulso 1.4s ease-in-out infinite;
+}
+@keyframes pulso {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+}
+
+/* Log */
+.log-box {
+    background: rgba(0,0,0,0.35);
+    border-radius: var(--r-md);
+    border: 1px solid var(--mesa-borde);
+    padding: 12px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+}
+.log-title, .acciones-title {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--texto-muted);
+    margin-bottom: 8px;
+}
+
+/* ID original del servidor */
+#mensajes {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 240px;
+    white-space: pre-wrap;
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgba(232,223,200,0.7);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(201,147,58,0.3) transparent;
+}
+
+/* Acciones */
+.acciones-box {
+    background: rgba(0,0,0,0.25);
+    border-radius: var(--r-md);
+    border: 1px solid var(--mesa-borde);
+    padding: 12px;
+}
+
+/* ID original */
+#input-area {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+}
+#input-area.visible {
+    display: flex;
+}
+
+#input-area button {
+    background: rgba(201,147,58,0.1);
+    border: 1px solid rgba(201,147,58,0.28);
+    border-radius: var(--r-sm);
+    padding: 9px 12px;
+    color: var(--oro-claro);
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    width: 100%;
+}
+#input-area button:hover {
+    background: rgba(201,147,58,0.22);
+    border-color: rgba(201,147,58,0.5);
+}
+#input-area button:active { transform: scale(0.98); }
+
+/* Botón "Irse al mazo" y "No quiero" — el último botón de opciones negativas */
+#input-area button:last-child {
+    background: rgba(180,50,50,0.1);
+    border-color: rgba(180,50,50,0.28);
+    color: #f09898;
+}
+#input-area button:last-child:hover {
+    background: rgba(180,50,50,0.22);
+    border-color: rgba(180,50,50,0.5);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 700px) {
+    .tp-main { grid-template-columns: 1fr; }
+    .tp-sidebar { order: -1; }
+    #mensajes { max-height: 130px; }
 }
