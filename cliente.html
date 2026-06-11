@@ -79,9 +79,13 @@
     
 
     // tirarCarta y enviarRespuesta ya no cambian mucho:
+    // function tirarCarta(numero, palo) {
+    //     ws.send(JSON.stringify({carta: [numero, palo]}));
+    //     // cliente.pl lo recibe, convierte a term Prolog, y lo manda al servidor
+    // }
     function tirarCarta(numero, palo) {
-        ws.send(JSON.stringify({carta: [numero, palo]}));
-        // cliente.pl lo recibe, convierte a term Prolog, y lo manda al servidor
+        ws.send("[" + numero + "," + palo + "].");
+        habilitarCartas(false);
     }
 
     // --- WebSocket ---
@@ -91,22 +95,58 @@
         ws = new WebSocket("ws://localhost:8316/ws");
         ws.onopen    = () => { mostrar("Conectado al servidor."); ws.send("join(" + nombre + ")."); };
         ws.onmessage = (event) => {
-            const señal = JSON.parse(event.data);
-
-            if (señal.accion === "pedir_carta") {
+            const msg = event.data;
+            mostrar("Servidor: " + msg);
+            
+            if (msg === "elige_accion") {
+                mostrarBotones([
+                    {valor: "1", texto: "1. Cantar envido"},
+                    {valor: "2", texto: "2. Cantar truco"},
+                    {valor: "3", texto: "3. Jugar carta"},
+                    {valor: "4", texto: "4. Irse al mazo"}
+                ]);
+            } else if (msg === "elige_accion_sin_envido") {
+                mostrarBotones([
+                    {valor: "1", texto: "1. Cantar truco"},
+                    {valor: "2", texto: "2. Jugar carta"},
+                    {valor: "3", texto: "3. Irse al mazo"}
+                ]);
+            } else if (msg.includes("Que carta tira")) {
                 habilitarCartas(true);
-                mostrar(">>> Hacé click en la carta a tirar");
-            }
-            else if (señal.accion === "mostrar_botones") {
-                mostrarBotones(señal.opciones);
-            }
-            else if (señal.accion === "mensaje") {
-                mostrar(señal.texto);
-            }
-            else if (señal.accion === "mostrar_cartas") {
-                mostrarCartas(señal.cartas);
+            } else if (msg.includes("aceptar: y")) {
+                mostrarBotones([
+                    {valor: "y", texto: "✓ Quiero"},
+                    {valor: "n", texto: "✗ No quiero"}
+                ]);
+            } else if (msg.includes("cartas restantes:")) {
+                // parsear las cartas y mostrarlas
+                const match = msg.match(/cartas restantes: (.+)/);
+                if (match) {
+                    try {
+                        const cartasStr = match[1].replace(/\[(\w+),(\w+)\]/g, '["$1","$2"]');
+                        const cartas = JSON.parse(cartasStr);
+                        mostrarCartas(cartas);
+                    } catch(e) {}
+                }
             }
         };
+        // ws.onmessage = (event) => {
+        //     const señal = JSON.parse(event.data);
+
+        //     if (señal.accion === "pedir_carta") {
+        //         habilitarCartas(true);
+        //         mostrar(">>> Hacé click en la carta a tirar");
+        //     }
+        //     else if (señal.accion === "mostrar_botones") {
+        //         mostrarBotones(señal.opciones);
+        //     }
+        //     else if (señal.accion === "mensaje") {
+        //         mostrar(señal.texto);
+        //     }
+        //     else if (señal.accion === "mostrar_cartas") {
+        //         mostrarCartas(señal.cartas);
+        //     }
+        // };
         ws.onclose   = () => mostrar("Conexión cerrada.");
         ws.onerror   = (e) => mostrar("Error: " + e);
     }
