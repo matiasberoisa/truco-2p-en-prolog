@@ -7,6 +7,7 @@
 :- use_module(library(http/http_files)).
 :- use_module(library(http/http_cors)).
 :- use_module(library(lists), [member/2]).
+:- use_module(library(process)).
 
 :- set_setting(http:cors, [*]).
 
@@ -21,10 +22,13 @@
 :- http_handler(root('swipl-bundle.js'), 
     http_reply_file('swipl-bundle.js', [mime_type(application/javascript)]), []).
 :- http_handler(root(.), http_reply_from_files('.', []), [prefix]).
+:- http_handler(root(''),
+                http_reply_file('cliente.html', []),
+                []).
 
 main :-
     http_server(http_dispatch, [port(8316)]),
-    format('Servidor genérico escuchando en puerto 8316...~n', []),
+    win_shell(open, 'http://localhost:8316/cliente.html'),
     esperar_fin_juego.
 
 

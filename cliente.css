@@ -24,11 +24,12 @@ body {
     background: var(--mesa-dark);
     font-family: 'Inter', 'Segoe UI', sans-serif;
     color: var(--texto);
-    min-height: 100vh;
+    height: 100vh;
     padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
+
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -135,9 +136,10 @@ input:focus, textarea:focus { border-color: rgba(201,147,58,0.55); }
 /* ── Layout principal ────────────────────────────────────── */
 .tp-main {
     display: grid;
-    grid-template-columns: 1fr 260px;
+    grid-template-columns: 1fr 400px;
     gap: 12px;
     flex: 1;
+    height: calc(100vh - 140px);
 }
 
 /* ── Mesa de juego ───────────────────────────────────────── */
@@ -224,15 +226,10 @@ input:focus, textarea:focus { border-color: rgba(201,147,58,0.55); }
 
 /* Reverso del oponente */
 .carta-reverso {
-    width: 72px;
-    height: 110px;
+    width: 70px;
+    height: 108px;
     border-radius: 8px;
-    background: repeating-linear-gradient(
-        45deg,
-        #1c3a6e 0px, #1c3a6e 4px,
-        #152e58 4px, #152e58 8px
-    );
-    border: 2px solid #2a5aa0;
+    background-image: url('reversoCarta.png');
     box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
 }
 
@@ -273,14 +270,15 @@ input:focus, textarea:focus { border-color: rgba(201,147,58,0.55); }
     background: rgba(0,0,0,0.35);
     border-radius: var(--r-md);
     border: 1px solid var(--mesa-borde);
-    padding: 12px;
+    padding: 20px;
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 180px;
+    height: 100%;
+    min-height: 0;
 }
 .log-title, .acciones-title {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -291,8 +289,11 @@ input:focus, textarea:focus { border-color: rgba(201,147,58,0.55); }
 /* ID original del servidor */
 #mensajes {
     flex: 1;
+    height: 100%;
     overflow-y: auto;
-    max-height: 240px;
+    overflow-x: hidden;
+    max-height: 450px;
+    min-height: 0;
     white-space: pre-wrap;
     font-size: 12px;
     line-height: 1.6;
