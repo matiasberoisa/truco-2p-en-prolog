@@ -170,7 +170,7 @@ ws.on("message", async (data) => {
   const mensaje = data.toString();
   console.log("[servidor] ->", mensaje);
  
-  if (!clasificarMensaje(mensaje)) {
+  if (!clasificarMensaje(mensaje)) { // cuando el mensaje no requiere respuesta (ej: "es su turno..")
     agregarAlHistorial(mensaje);
     return;
   }
