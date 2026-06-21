@@ -44,6 +44,9 @@ valor_envido(1, 1).
 
 estado(S0, S, S0, S). % estado(EntradaVisible, SalidaVisible, EntradaDCG, SalidaDCG).
 
+%estado(S), [S] --> [S].
+%estado(S0, S), [S] --> [S0]. %no funciona el codigo con esto
+
 truco(Jugadores) -->
     crearJugadores(Jugadores),
     jugar_rondas.
@@ -501,8 +504,8 @@ accion(3, NombreAccion) -->
 envido_querido --> 
     estado(S0, S),
     {
-        select(ronda(_, jugadores(Js)), S0, S1), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
-        select(envido(0, NombreCanto), S1, S2), % Saca el estado con el envido de S1 generando S2 sin ese estado
+        select(ronda(_, jugadores(Js)), S0, _), % Saca el estado con los jugadores de S0 generando S1 sin esos jugadores
+        select(envido(0, NombreCanto), S0, S2), % Saca el estado con el envido de S1 generando S2 sin ese estado
         Js = [jugador(NombreP1, CartasEnManoP1, _, WS1), jugador(NombreP2, CartasEnManoP2, _, WS2)],
 
         % ANTES
@@ -620,11 +623,17 @@ repetir(CartasEnMano, Respuesta):-
     repetir(CartasEnMano, Respuesta).
 
 cargar_accion_primer_mano(NombreP, Ws) --> 
-    {repetirAccion_ws(Respuesta, Ws)},
+    {
+        ws_receive(Ws, Mensaje, [format(prolog)]),
+        Respuesta = Mensaje.data
+    },
     accion_primer_mano(Respuesta, NombreP).
 
 cargar_accion(NombreP, Ws) -->
-    {repetirAccion_ws(Respuesta, Ws)},
+    {
+        ws_receive(Ws, Mensaje, [format(prolog)]),
+        Respuesta = Mensaje.data
+    },
     accion(Respuesta, NombreP).
 
 % Viejos lectores, no los borre por siacaso estan contenido en las lineas
