@@ -1,9 +1,9 @@
 {
+  "type": "module",
   "dependencies": {
     "dotenv": "^17.4.2",
     "openai": "^6.44.0",
     "swipl-wasm": "^7.0.10",
-    "ws": "^8.21.0",
-    "type": "module"
+    "ws": "^8.21.0"
   }
 }
