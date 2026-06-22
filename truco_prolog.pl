@@ -339,7 +339,7 @@ jugar_tercera_mano --> % P es el jugador actual, Ps es la lista de jugadores res
         format(atom(MsgGanador), "~a gana esta ronda!~n", [NombreGanador]),
         ws_send(Ws1, text(MsgGanador)),
         ws_send(Ws2, text(MsgGanador)),
-        S = [ronda(NumeroRonda, jugadores([Perdedor, Ganador]))|S3]
+        S = [ronda(NumeroRonda, jugadores([Ganador, Perdedor]))|S3]
     }.
 
 accion_primer_mano(1, NombreAccion) -->
@@ -432,16 +432,20 @@ accion_truco_decision(Res,NombreAccion) -->
     estado(S0,S),
     {
     	Res = n,
-      	select(ronda(_, jugadores([jugador(_,_,_,Ws1), jugador(_,_,_,Ws2)])), S0, _),
+      	select(ronda(_, jugadores([jugador(_,C1,PJ1,Ws1), jugador(_,C2,PJ2,Ws2)])), S0, _),
         ws_send(Ws1, text("NO QUIERO")),
         ws_send(Ws2, text("NO QUIERO")),
         select(ronda(NumeroRonda, jugadores(Js)), S0, S1),
         (
-            Js = [jugador(NombreAccion,_,_, Ws1), jugador(_,_,_, Ws2)]
+            Js = [jugador(NombreAccion,C1,PJ1,Ws1), jugador(Rechazo,C2,PJ2,Ws2)],
+            JsNuevo = [jugador(NombreAccion,C1,PJ1,Ws1), jugador(Rechazo,C2,PJ2,Ws2)]
+
         ;
-            Js = [jugador(_,_,_, Ws1), jugador(NombreAccion,_,_, Ws2)]
+            Js = [jugador(Rechazo,C1,PJ1,Ws1), jugador(NombreAccion,C2,PJ2,Ws2)],
+            JsNuevo = [jugador(NombreAccion,C2,PJ2,Ws2), jugador(Rechazo,C1,PJ1,Ws1)]
+
         ),
-        S = [ronda(NumeroRonda, jugadores(Js))|S1],
+        S = [ronda(NumeroRonda, jugadores(JsNuevo))|S1],
         throw(irse_al_mazo(S))
     }.  
     
